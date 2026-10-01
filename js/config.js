@@ -63,7 +63,7 @@ window.GIFT = {
     {
       t: 0.00, title: "Berlin, Germany", date: "14.02.2025",
       quote: "Everything started here… In a city full of dreams, I met my favorite person.",
-      photo: "assets/photos/00.jpg", audio: "assets/audio/00.mp3", video: "dfc37afb7f8423dd1ba8a8eb968dc6eb.mp4",
+      photo: "assets/photos/00.jpg", audio: "assets/audio/00.mp3", video: "assets/video/dfc37afb7f8423dd1ba8a8eb968dc6eb.mp4",
       chat: [
         { me: false, text: "Hi… I think we matched 🙂", time: "21:04" },
         { me: true,  text: "Hi you. I was hoping you'd say hello first.", time: "21:05" },
