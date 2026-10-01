@@ -102,10 +102,10 @@
 
     /* ----- tiles ----- */
     url(z, x, y) {
-      return 'https://' + 'abcd'[(x + y) % 4] + '.basemaps.cartocdn.com/dark_all/' + z + '/' + x + '/' + y + (this.retina ? '@2x' : '') + '.png';
+      return 'https://' + 'abcd'[(x + y) % 4] + '.basemaps.cartocdn.com/dark_all/' + z + '/' + x + '/' + y + (this.retina ? '@2x' : '') +'.png';
     }
     tile(z, x, y) {
-      const key = z + '/' + x + '/' + y;
+      const key = z + '/' + x + '/' + y + '/' + '/cb1_46j8_1_7115d84e6f4b94e4bef4eae0 ';
       let t = this.tiles.get(key);
       if (!t) {
         t = { img: new Image(), ok: false, fail: false, at: 0 };
