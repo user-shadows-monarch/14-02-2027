@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070a1f">
+<meta name="robots" content="noindex, nofollow">
+<title>Berlin ✈ Gabès · a journey for you</title>
+<meta property="og:title" content="A special journey for someone even more special…">
+<meta property="og:description" content="Tap to begin.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E💗%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app" data-scene="s-open">
+
+  <!-- painted backgrounds, cross-faded per scene -->
+  <div id="bg" aria-hidden="true">
+    <div class="bgl" data-bg="open"></div>
+    <div class="bgl" data-bg="letter"><div class="candle"></div></div>
+    <div class="bgl" data-bg="reveal"></div>
+    <div class="bgl" data-bg="final"></div>
+    <div class="bgl" data-bg="promise">
+      <div class="sun"></div>
+      <div class="sea"><i></i><i></i><i></i><i></i><i></i></div>
+      <svg class="palm palm-l" viewBox="0 0 200 320" aria-hidden="true"><g fill="none" stroke="#08030f" stroke-linecap="round"><path d="M22 320 C34 240 46 170 88 96" stroke-width="7"/><path d="M88 96 C60 78 30 86 6 112" stroke-width="4"/><path d="M88 96 C70 62 44 52 18 60" stroke-width="4"/><path d="M88 96 C92 62 112 40 146 38" stroke-width="4"/><path d="M88 96 C116 78 150 84 182 116" stroke-width="4"/><path d="M88 96 C108 112 116 138 108 168" stroke-width="4"/><path d="M88 96 C64 108 50 132 54 160" stroke-width="4"/></g></svg>
+      <svg class="palm palm-r" viewBox="0 0 200 320" aria-hidden="true"><g fill="none" stroke="#08030f" stroke-linecap="round"><path d="M178 320 C168 250 150 190 118 128" stroke-width="7"/><path d="M118 128 C92 108 62 110 34 136" stroke-width="4"/><path d="M118 128 C110 92 86 74 58 76" stroke-width="4"/><path d="M118 128 C126 92 150 76 184 84" stroke-width="4"/><path d="M118 128 C140 116 170 124 196 156" stroke-width="4"/><path d="M118 128 C132 148 136 172 126 198" stroke-width="4"/></g></svg>
+    </div>
+  </div>
+
+  <canvas id="map" aria-label="Map of the flight from Berlin to Gabès"></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- persistent header for the map scenes -->
+  <div id="hud" aria-live="polite">
+    <h2><span id="hud-a">Berlin</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/></svg> <span id="hud-b">Gabès</span></h2>
+    <p id="hud-sub"></p>
+    <div class="prog"><i id="prog-fill"></i></div>
+  </div>
+
+  <button id="sound" class="icon-btn" aria-label="Mute music" hidden>
+    <svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 10v4h4l5 4V6L7 10H3zm13.5 2A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+    <svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 10v4h4l5 4V6L7 10H3zm13.6 2 2.7-2.7-1.4-1.4-2.7 2.7-2.7-2.7-1.4 1.4 2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4z"/></svg>
+  </button>
+
+  <!-- 1 · Opening -->
+  <section class="scene" id="s-open">
+    <div class="open-text">
+      <h1 class="poem stg" style="--d:.5s" id="o-title"></h1>
+      <p class="small stg" style="--d:1.1s" id="o-text"></p>
+    </div>
+    <svg class="skyline" viewBox="0 0 400 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs><linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34104a"/><stop offset="1" stop-color="#0b0618"/></linearGradient></defs>
+      <g fill="url(#skyg)" stroke="#ff5c9a" stroke-width=".9" stroke-opacity=".8" stroke-linejoin="round" style="filter:drop-shadow(0 0 3px rgba(255,70,140,.85))">
+        <rect x="0" y="108" width="24" height="42"/><rect x="24" y="96" width="18" height="54"/><rect x="42" y="112" width="20" height="38"/>
+        <path d="M67 150 L68.6 70 L71.4 70 L73 150Z"/><path d="M62 150 L70 96 L78 150Z" fill-opacity=".9"/>
+        <circle cx="70" cy="64" r="8"/><path d="M70 56 L70 14" fill="none" stroke-width="1.3"/><path d="M63 68 h14" fill="none"/>
+        <rect x="80" y="104" width="22" height="46"/><rect x="102" y="116" width="26" height="34"/><rect x="128" y="100" width="16" height="50"/>
+        <rect x="144" y="118" width="30" height="32"/><rect x="174" y="108" width="20" height="42"/><rect x="194" y="122" width="26" height="28"/>
+        <rect x="220" y="110" width="18" height="40"/><rect x="238" y="124" width="24" height="26"/><rect x="262" y="114" width="20" height="36"/>
+        <path d="M290 150 v-26 q14 -22 28 0 v26Z"/><rect x="286" y="120" width="34" height="4"/>
+        <rect x="326" y="58" width="8" height="92"/><path d="M324 58 h12 l-6 -12Z"/><path d="M330 46 v-9" fill="none" stroke-width="1.2"/><rect x="323" y="80" width="14" height="3"/>
+        <rect x="344" y="118" width="24" height="32"/><rect x="368" y="108" width="32" height="42"/>
+        <path d="M262 150 C264 130 268 116 280 100" fill="none" stroke-width="2"/><path d="M280 100 q-14 -6 -22 4 M280 100 q-4 -14 -16 -16 M280 100 q10 -12 24 -8 M280 100 q14 2 20 14" fill="none" stroke-width="1.6"/>
+      </g>
+      <g fill="#ffb3d1" opacity=".65"><rect x="30" y="104" width="2" height="3"/><rect x="34" y="112" width="2" height="3"/><rect x="86" y="112" width="2" height="3"/><rect x="92" y="122" width="2" height="3"/><rect x="132" y="108" width="2" height="3"/><rect x="150" y="126" width="2" height="3"/><rect x="224" y="118" width="2" height="3"/><rect x="266" y="122" width="2" height="3"/><rect x="372" y="118" width="2" height="3"/><rect x="376" y="128" width="2" height="3"/></g>
+    </svg>
+    <button id="begin" class="begin stg" style="--d:1.9s"><span id="o-btn">Tap to begin</span><i class="chev"></i></button>
+  </section>
+
+  <!-- 2 · Letter -->
+  <section class="scene" id="s-letter">
+    <p class="hint stg" style="--d:.4s"><span id="l-hint"></span><small id="l-sub"></small></p>
+    <div class="env-wrap" id="env-wrap">
+      <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Open the letter">
+        <div class="env-back"></div>
+        <div class="paper"></div>
+        <div class="env-pocket"></div>
+        <div class="env-flap"></div>
+        <div class="seal"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.4 1 5.6 3.3C14.2 6 15.6 5 17.6 5 21 5 23.1 8.4 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg></div>
+      </div>
+    </div>
+    <article class="letter-card" id="letter-card" tabindex="-1">
+      <div class="letter-scroll" id="letter-scroll"></div>
+      <button id="letter-next" class="pill" hidden></button>
+    </article>
+  </section>
+
+  <!-- 3 · Journey map (overview) -->
+  <section class="scene" id="s-map">
+    <button id="go" class="pill stg" style="--d:1.2s"><span id="go-label">Our journey</span><i class="chev down"></i></button>
+  </section>
+
+  <!-- flight in progress: map + header only -->
+  <section class="scene" id="s-flight" aria-hidden="true"></section>
+
+  <!-- 4–9 · Memory sheet -->
+  <section class="scene" id="s-memory">
+    <div class="sheet" id="sheet" role="dialog" aria-labelledby="m-title">
+      <div class="sh-head">
+        <svg class="pin" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+        <div class="sh-title"><h3 id="m-title"></h3><time id="m-date"></time></div>
+        <button class="heart-btn" id="m-heart" aria-label="Love this memory" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.4 1 5.6 3.3C14.2 6 15.6 5 17.6 5 21 5 23.1 8.4 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg></button>
+      </div>
+      <div class="media" id="media">
+        <div class="pane pane-photo on" id="pane-photo">
+          <img id="m-img" alt="" decoding="async">
+          <div class="fb"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.4 1 5.6 3.3C14.2 6 15.6 5 17.6 5 21 5 23.1 8.4 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg><span id="fb-date"></span></div>
+        </div>
+        <div class="pane pane-chat" id="pane-chat"></div>
+        <div class="pane pane-video" id="pane-video"><video id="m-video" controls playsinline preload="metadata"></video></div>
+      </div>
+      <p class="quote" id="m-quote"></p>
+      <div class="ab" id="m-audio" hidden></div>
+      <div class="sh-foot">
+        <div class="tabs" id="tabs" role="tablist">
+          <button class="tab on" data-tab="photo" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.500l2.500 3 3.500-4.500 4.500 6H5l3.500-4.500z"/></svg>Photo</button>
+          <button class="tab" data-tab="chat" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2z"/></svg>Chat</button>
+          <button class="tab" data-tab="video" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h11a2 2 0 0 1 2 2v3l5-3v10l-5-3v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Video</button>
+        </div>
+        <button class="next" id="m-next"><span id="m-next-label">Next memory</span><i class="chev right"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · Crossing -->
+  <section class="scene" id="s-cross">
+    <div class="cross-top"><h3 class="poem" id="x-title"></h3><p id="x-sub"></p></div>
+    <p class="script cross-script" id="x-script"></p>
+  </section>
+
+  <!-- 11 · Arrival -->
+  <section class="scene" id="s-arrive">
+    <div class="arrive-card">
+      <p class="poem" id="a-text"></p>
+      <button id="a-btn" class="pill wide"><span id="a-label"></span><i class="chev right"></i></button>
+    </div>
+  </section>
+
+  <!-- 12 · Birthday -->
+  <section class="scene" id="s-birthday">
+    <div class="bd-top">
+      <h2 class="script bd-title stg" style="--d:.3s" id="b-script"></h2>
+      <p class="bd-sub stg" style="--d:.9s" id="b-sub"></p>
+      <p class="bd-lines stg" style="--d:1.4s" id="b-lines"></p>
+    </div>
+    <button class="cake-btn" id="cake" aria-label="Blow out the candles">
+      <svg class="cake" viewBox="0 0 240 250" aria-hidden="true">
+        <defs>
+          <linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd0dc"/><stop offset="1" stop-color="#ee6f98"/></linearGradient>
+          <linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe0e8"/><stop offset="1" stop-color="#f58aab"/></linearGradient>
+          <radialGradient id="fl" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#fffbe0"/><stop offset=".45" stop-color="#ffc35a"/><stop offset="1" stop-color="#ff6a2a"/></radialGradient>
+          <radialGradient id="cglow"><stop offset="0" stop-color="#ffb35a" stop-opacity=".55"/><stop offset="1" stop-color="#ffb35a" stop-opacity="0"/></radialGradient>
+        </defs>
+        <circle class="cglow" cx="120" cy="66" r="92" fill="url(#cglow)"/>
+        <ellipse cx="120" cy="228" rx="108" ry="15" fill="#2a1030" stroke="#ff5c9a" stroke-opacity=".6"/>
+        <rect x="34" y="150" width="172" height="74" rx="14" fill="url(#cg1)"/>
+        <path d="M34 164 q11 16 22 0 q11 20 22 0 q11 14 22 0 q11 20 22 0 q11 14 22 0 q11 20 22 0 q11 14 22 0 q11 18 22 0 v-14 h-172z" fill="#fff4f6"/>
+        <rect x="62" y="104" width="116" height="52" rx="12" fill="url(#cg2)"/>
+        <path d="M62 116 q9.700 14 19 0 q9.700 18 19 0 q9.700 12 19 0 q9.700 18 19 0 q9.700 12 19 0 q9.700 16 19 0 v-12 h-116z" fill="#fff4f6"/>
+        <g fill="#d61f4c"><circle cx="70" cy="146" r="5"/><circle cx="96" cy="152" r="5"/><circle cx="144" cy="152" r="5"/><circle cx="170" cy="146" r="5"/><circle cx="60" cy="200" r="5"/><circle cx="90" cy="206" r="5"/><circle cx="150" cy="206" r="5"/><circle cx="180" cy="200" r="5"/></g>
+        <g class="candles">
+          <g class="cd" style="--i:0"><rect x="76" y="70" width="7" height="34" rx="2" fill="#fff2e2"/><path d="M76 78 l7 -4 M76 88 l7 -4 M76 98 l7 -4" stroke="#ff8fb2" stroke-width="2"/><path class="flame" d="M79.500 44 c6 8 6 15 0 21 c-6 -6 -6 -13 0 -21z" fill="url(#fl)"/><path class="smoke" d="M79.500 60 q-6 -10 2 -18 q6 -8 -2 -16"/></g>
+          <g class="cd" style="--i:1"><rect x="98" y="62" width="7" height="42" rx="2" fill="#fff2e2"/><path d="M98 72 l7 -4 M98 84 l7 -4 M98 96 l7 -4" stroke="#ffd27a" stroke-width="2"/><path class="flame" d="M101.500 36 c6 8 6 15 0 21 c-6 -6 -6 -13 0 -21z" fill="url(#fl)"/><path class="smoke" d="M101.500 52 q-6 -10 2 -18 q6 -8 -2 -16"/></g>
+          <g class="cd" style="--i:2"><rect x="117" y="56" width="7" height="48" rx="2" fill="#fff2e2"/><path d="M117 66 l7 -4 M117 80 l7 -4 M117 94 l7 -4" stroke="#ff8fb2" stroke-width="2"/><path class="flame" d="M120.500 30 c6 8 6 15 0 21 c-6 -6 -6 -13 0 -21z" fill="url(#fl)"/><path class="smoke" d="M120.500 46 q-6 -10 2 -18 q6 -8 -2 -16"/></g>
+          <g class="cd" style="--i:3"><rect x="137" y="62" width="7" height="42" rx="2" fill="#fff2e2"/><path d="M137 72 l7 -4 M137 84 l7 -4 M137 96 l7 -4" stroke="#ffd27a" stroke-width="2"/><path class="flame" d="M140.500 36 c6 8 6 15 0 21 c-6 -6 -6 -13 0 -21z" fill="url(#fl)"/><path class="smoke" d="M140.500 52 q-6 -10 2 -18 q6 -8 -2 -16"/></g>
+          <g class="cd" style="--i:4"><rect x="158" y="70" width="7" height="34" rx="2" fill="#fff2e2"/><path d="M158 78 l7 -4 M158 88 l7 -4 M158 98 l7 -4" stroke="#ff8fb2" stroke-width="2"/><path class="flame" d="M161.500 44 c6 8 6 15 0 21 c-6 -6 -6 -13 0 -21z" fill="url(#fl)"/><path class="smoke" d="M161.500 60 q-6 -10 2 -18 q6 -8 -2 -16"/></g>
+        </g>
+      </svg>
+    </button>
+    <p class="wish" id="b-hint"></p>
+    <button id="b-next" class="pill" hidden></button>
+  </section>
+
+  <!-- 13 · Final message -->
+  <section class="scene" id="s-final">
+    <div class="final-lines" id="f-lines"></div>
+    <div class="ab final-ab" id="f-audio" hidden></div>
+    <button id="f-next" class="pill" hidden></button>
+  </section>
+
+  <!-- 14 · Promise -->
+  <section class="scene" id="s-promise">
+    <div class="promise-text">
+      <p class="poem" id="p-lines"></p>
+      <svg class="heart-sm" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.4 1 5.6 3.3C14.2 6 15.6 5 17.6 5 21 5 23.1 8.4 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg>
+    </div>
+    <div class="promise-actions">
+      <button id="p-btn" class="pill wide"><span id="p-label"></span><i class="chev right"></i></button>
+      <p class="poem after" id="p-after" hidden></p>
+      <button id="p-replay" class="ghost" hidden></button>
+    </div>
+  </section>
+
+  <p class="credit" id="credit">Map © OpenStreetMap contributors © CARTO</p>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/music.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
