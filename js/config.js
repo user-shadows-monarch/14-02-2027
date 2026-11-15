@@ -49,6 +49,10 @@ window.GIFT = {
        extra: [ { me: true, text: "Good morning, beautiful", date: "15.02.2025" } ] */
   floatChat: { enabled: true, every: 2.6, duration: 17, extra: [] },
 
+  /* 3D flight (tilted camera behind the plane, 3D plane, raised flight path).
+     Set to false to use the flat top-down map instead. */
+  view3d: true,
+
   opening: {
     title: ["A special journey", "for someone even more special…"],
     text: ["It's not just a birthday,", "it's also Valentine's Day.", "Two reasons to celebrate you."],
@@ -155,7 +159,12 @@ window.GIFT = {
     script: "Happy Birthday",
     sub: "and Happy Valentine's Day",
     lines: ["Two special days…", "One amazing you."],
-    hint: "Make a wish, then tap the candles",
+    mic: true,            // true = blow into the microphone; false = just tap the candles
+    blowSeconds: 1.1,     // how long she has to blow (a bit longer = harder)
+    hintAsk: "Allow the microphone, then blow out the candles…",
+    hint: "Make a wish, then blow into your microphone",
+    hintTap: "Make a wish, then tap the candles",
+    skip: "Can't blow? Tap here",
     wish: "Your wish is on its way ♥",
     button: "Continue"
   },

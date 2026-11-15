@@ -36,6 +36,33 @@ Without the two music files the page plays its own built-in piano and music
 box. If you add your own songs, make sure you have the right to use them.
 Keep photos small and videos under ~25 MB so it loads fast on a phone.
 
+### Pilot avatar, bouquet and side chat
+
+- **Your face:** put a photo of your face at `assets/pilot/face.jpg` (square-ish, under 200 KB).
+  It appears in a captain's-cap avatar beside the plane during every flight leg and
+  holds a bouquet of red roses when the plane lands in Gabès. Without a photo a
+  silhouette is shown. Settings are in `js/config.js` under `pilot`.
+- **Endless side chat:** from take-off until landing, the chat messages of your
+  memories drift up the left side of the screen as plain text (hers in white, yours
+  in pink) with their dates. Add extra lines under `floatChat.extra`, or turn it
+  off with `enabled: false`.
+
+### Blowing out the candles
+
+On the birthday page she blows into her phone's microphone and the candles go out one by one
+(the music quiets so it doesn't leak into the mic). The browser asks for microphone permission
+first. Nothing is recorded or uploaded, it only measures the sound live and releases the mic when
+the candles are out. It needs the https GitHub Pages link (or localhost). If the microphone is
+denied or unavailable, tapping the candles works instead. In `js/config.js` under `birthday` you can
+set `mic: false` (tap only) or change `blowSeconds` (how long she must blow).
+
+### 3D flight
+
+The flight is 3D: a tilted camera follows behind a 3D plane that takes off, cruises and lands, with a
+raised glowing flight path, 3D pins and soft clouds over the real map. It uses only your browser's
+built-in graphics (no extra library). If you prefer the flat top-down map, set `view3d: false` in
+`js/config.js` (or add `?2d` to the address to compare). If anything goes wrong the page uses the flat map.
+
 ## 3. Preview on your computer
 
 Browsers block some features on `file://`, so use a tiny local server:

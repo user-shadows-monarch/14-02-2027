@@ -20,19 +20,20 @@
     if (ctx) return ctx;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
-    ctx = new AC();
+    try { ctx = new AC({ latencyHint: 'playback' }); } catch (e) { ctx = new AC(); }
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -16; comp.ratio.value = 3;
-    comp.connect(ctx.destination);
+    comp.threshold.value = -20; comp.ratio.value = 4; comp.knee.value = 24;
+    const outGain = ctx.createGain(); outGain.gain.value = 0.6; // headroom: no clipping
+    comp.connect(outGain); outGain.connect(ctx.destination);
     // soft hall reverb from generated noise
-    const len = Math.floor(ctx.sampleRate * 3.2);
+    const len = Math.floor(ctx.sampleRate * 1.8);
     const buf = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let c = 0; c < 2; c++) {
       const d = buf.getChannelData(c);
-      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
     }
     const conv = ctx.createConvolver(); conv.buffer = buf;
-    sendBus = ctx.createGain(); sendBus.gain.value = 0.5;
+    sendBus = ctx.createGain(); sendBus.gain.value = 0.32;
     sendBus.connect(conv); conv.connect(comp);
     ctx.__out = comp;
     return ctx;
@@ -60,7 +61,7 @@
   }
 
   function pad(dest, t, notes, dur, vel) {
-    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
     g.gain.linearRampToValueAtTime(vel, t + 1.0);
@@ -68,11 +69,9 @@
     g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.9);
     lp.connect(g); g.connect(dest);
     notes.forEach(n => {
-      [-6, 6].forEach(det => {
-        const o = ctx.createOscillator(); o.type = 'sawtooth';
-        o.frequency.value = mtof(n); o.detune.value = det;
-        o.connect(lp); o.start(t); o.stop(t + dur + 1);
-      });
+      const o = ctx.createOscillator(); o.type = 'triangle';
+      o.frequency.value = mtof(n);
+      o.connect(lp); o.start(t); o.stop(t + dur + 1);
     });
   }
 
@@ -96,9 +95,9 @@
       ev.push({ t: s, d: 3.6, m: bass, k: 'pluck', v: 0.3 });
       ev.push({ t: s + 2, d: 1.8, m: bass + 7, k: 'pluck', v: 0.14 });
       const arp = [notes[0], notes[1], notes[2], notes[1] + 12];
-      pat.forEach((p, i) => ev.push({ t: s + i * 0.5, d: 0.7, m: arp[p], k: 'pluck', v: 0.13 }));
+      pat.forEach((p, i) => ev.push({ t: s + i * 0.5, d: 0.7, m: arp[p], k: 'pluck', v: 0.10 }));
       let x = s;
-      mel[b].forEach(([m, d]) => { if (m) ev.push({ t: x, d: d * 1.4, m, k: 'pluck', v: 0.34 }); x += d; });
+      mel[b].forEach(([m, d]) => { if (m) ev.push({ t: x, d: d * 1.4, m, k: 'pluck', v: 0.28 }); x += d; });
     });
     ev.sort((a, b) => a.t - b.t);
     return { bpm: 66, loop: 32, tr: [0], ev };
@@ -119,7 +118,7 @@
     ];
     const ev = [];
     let x = 0;
-    lines.forEach(l => l.forEach(([m, d]) => { ev.push({ t: x, d: d * 1.6, m, k: 'box', v: 0.34 }); x += d; }));
+    lines.forEach(l => l.forEach(([m, d]) => { ev.push({ t: x, d: d * 1.6, m, k: 'box', v: 0.28 }); x += d; }));
     chordPlan.forEach(([s, name, len]) => {
       const [notes, bass] = C[name];
       ev.push({ t: s, d: 1.5, m: bass, k: 'pluck', v: 0.26 });
@@ -144,7 +143,7 @@
     let loop = 0, idx = 0, base = ctx.currentTime + 0.12;
     const timer = setInterval(() => {
       if (!ctx || ctx.state !== 'running') return;
-      const horizon = ctx.currentTime + 0.6;
+      const horizon = ctx.currentTime + 1.6;
       for (let guard = 0; guard < 400; guard++) {
         const e = def.ev[idx];
         const t = base + e.t * beat;
@@ -157,7 +156,7 @@
         idx++;
         if (idx >= def.ev.length) { idx = 0; loop++; base += def.loop * beat; }
       }
-    }, 110);
+    }, 250);
     return () => clearInterval(timer);
   }
 
@@ -165,7 +164,7 @@
   function applyVol(tr) {
     if (!tr) return;
     if (tr.kind === 'synth') {
-      tr.gain.gain.setTargetAtTime(tr.fade * LEVEL[tr.name] * level(), ctx.currentTime, 0.08);
+      tr.gain.gain.setTargetAtTime(tr.fade * LEVEL[tr.name] * level(), ctx.currentTime, 0.15);
     } else {
       tr.el.volume = Math.max(0, Math.min(1, tr.fade * FILE_LEVEL[tr.name] * level()));
     }
@@ -180,7 +179,7 @@
       tr.fade = from + (to - from) * k;
       applyVol(tr);
       if (k >= 1) { clearInterval(tr.fadeTimer); done && done(); }
-    }, 40);
+    }, 80);
   }
 
   function makeTrack(name) {

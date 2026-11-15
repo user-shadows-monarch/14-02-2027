@@ -10,7 +10,9 @@
 
   /* ---------- map instance (also gives us the real distance) ---------- */
   const R = C.route;
-  const map = new window.MiniMap($('#map'), R.from, R.to, C.tiles);
+  // 3D flight by default; the flat map is the automatic fallback (or add ?2d to the address to compare)
+  const Use3D = C.view3d !== false && !!window.Map3D && !/[?&]2d\b/.test(location.search);
+  const map = new (Use3D ? window.Map3D : window.MiniMap)($('#map'), R.from, R.to, C.tiles);
   const km = Math.round(map.km / 10) * 10;
 
   /* ---------- text helpers ---------- */
@@ -299,17 +301,65 @@
   }
 
   /* ---------- birthday ---------- */
-  let blown = false;
+  let blown = false, blowMode = 'pending', skipTimer = 0;
+  const candles = () => $$('#cake .cd');
+  const OUT_ORDER = [2, 1, 3, 0, 4]; // centre first, then outwards
   function birthdayScene() {
     go('s-birthday');
-    blown = false;
-    $('#cake').classList.remove('out'); $('#b-next').hidden = true; $('#b-hint').textContent = tpl(C.birthday.hint);
+    blown = false; blowMode = 'pending'; clearTimeout(skipTimer);
+    candles().forEach(c => c.classList.remove('out'));
+    $('#cake').classList.remove('out', 'blowing');
+    const glow = $('#cake .cglow'); if (glow) glow.style.opacity = '';
+    $('#b-next').hidden = true; $('#blow').hidden = true; $('#blow-skip').hidden = true; $('#blow-zone').hidden = true;
+    $('#blow-skip').textContent = tpl(C.birthday.skip || "Can't blow? Tap here");
+    $('#b-hint').textContent = tpl(C.birthday.hintTap);
     setTimeout(() => FX.confetti(undefined, undefined, 140), 500);
     setTimeout(() => FX.fireworks(4), 1100);
-    setTimeout(() => { if (!blown && currentScene === 's-birthday') $('#b-next').hidden = false; }, 9000);
+    startBlowing();
+    setTimeout(() => { if (!blown && currentScene === 's-birthday') $('#b-next').hidden = false; }, 14000);
+  }
+  function startBlowing() {
+    if (C.birthday.mic === false || !window.Blow) { blowMode = 'tap'; return; }
+    $('#b-hint').textContent = tpl(C.birthday.hintAsk);
+    $('#blow-zone').hidden = false;
+    window.Blow.start({
+      seconds: C.birthday.blowSeconds,
+      onReady() {
+        blowMode = 'mic';
+        $('#b-hint').textContent = tpl(C.birthday.hint);
+        $('#blow').hidden = false;
+        window.Music.duck(true); // keep the music from leaking into the mic
+        skipTimer = setTimeout(() => { if (!blown) $('#blow-skip').hidden = false; }, 18000);
+      },
+      onLevel(l) {
+        $('#blow-fill').style.width = Math.round(l * 100) + '%';
+        $('#cake').classList.toggle('blowing', l > 0.12 && !blown);
+      },
+      onProgress(p) {
+        const n = Math.min(5, Math.floor(p * 5 + 1e-6));
+        const cs = candles();
+        OUT_ORDER.slice(0, n).forEach(i => { if (cs[i]) cs[i].classList.add('out'); });
+        const glow = $('#cake .cglow'); if (glow) glow.style.opacity = String(1 - n / 5);
+      },
+      onDone() { blow(); },
+      onFail() {
+        blowMode = 'tap';
+        $('#blow-zone').hidden = true;
+        $('#b-hint').textContent = tpl(C.birthday.hintTap);
+      }
+    });
+  }
+  function stopBlowing() {
+    clearTimeout(skipTimer);
+    if (window.Blow) window.Blow.stop();
+    window.Music.duck(false);
+    $('#blow-zone').hidden = true;
+    $('#cake').classList.remove('blowing');
   }
   function blow() {
     if (blown) return; blown = true;
+    stopBlowing();
+    candles().forEach(c => c.classList.add('out'));
     $('#cake').classList.add('out');
     $('#b-hint').textContent = tpl(C.birthday.wish);
     const r = $('#cake').getBoundingClientRect(), a = app.getBoundingClientRect();
@@ -317,9 +367,15 @@
     FX.fireworks(6);
     setTimeout(() => { $('#b-next').hidden = false; }, 1800);
   }
+  // tapping the cake only works if the microphone is not available (or she taps the "can't blow" link)
+  function onCakeTap() {
+    if (blowMode === 'tap') blow();
+    else if (!blown) $('#b-hint').textContent = tpl(C.birthday.hint);
+  }
 
   /* ---------- finale ---------- */
   function finalScene() {
+    stopBlowing();
     const box = $('#f-lines'); box.innerHTML = '';
     const arr = C.finale.lines.map(tpl);
     let d = 0.7;
@@ -373,7 +429,8 @@
   });
   $('#go').addEventListener('click', journey);
   $('#a-btn').addEventListener('click', () => { window.Music.crossfadeTo('birthday'); if (window.Extras) Extras.pilot.hide(); });
-  $('#cake').addEventListener('click', blow);
+  $('#cake').addEventListener('click', onCakeTap);
+  $('#blow-skip').addEventListener('click', blow);
   $('#b-next').addEventListener('click', finalScene);
   $('#f-next').addEventListener('click', promiseScene);
   $('#sound').addEventListener('click', e => {
