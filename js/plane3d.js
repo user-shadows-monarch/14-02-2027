@@ -1,6 +1,8 @@
 import * as THREE from 'https://esm.sh/three@0.180.0';
 import { GLTFLoader } from 'https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
+const VIEW_SIZE = 192;
+
 export class Plane3DRenderer {
   constructor(mapCanvas, onLoad, onError) {
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -10,9 +12,11 @@ export class Plane3DRenderer {
     mapCanvas.parentNode.insertBefore(this.canvas, mapCanvas.nextSibling);
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+    this.camera = new THREE.OrthographicCamera(-VIEW_SIZE / 2, VIEW_SIZE / 2, VIEW_SIZE / 2, -VIEW_SIZE / 2, 0.1, 200);
     this.camera.position.z = -100;
     this.camera.lookAt(0, 0, 0);
+    this.renderer.setPixelRatio(1);
+    this.renderer.setSize(VIEW_SIZE, VIEW_SIZE, false);
     this.scene.add(new THREE.AmbientLight(0xffffff, 1.2));
     const key = new THREE.DirectionalLight(0xffe6f0, 1.8);
     key.position.set(-35, 55, -80);
@@ -27,7 +31,6 @@ export class Plane3DRenderer {
     this.orientation.add(this.attitude);
     this.attitude.add(this.model);
     this.orientation.rotation.x = -Math.PI / 2;
-    this.canvasSize = { width: 0, height: 0 };
     this.modelReady = false;
     this.visibilityChecked = false;
 
@@ -56,20 +59,9 @@ export class Plane3DRenderer {
   }
 
   render(state) {
-    const width = Math.max(1, state.width);
-    const height = Math.max(1, state.height);
-    if (width !== this.canvasSize.width || height !== this.canvasSize.height) {
-      this.canvasSize = { width, height };
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-      this.renderer.setSize(width, height, false);
-      this.camera.left = -width / 2;
-      this.camera.right = width / 2;
-      this.camera.top = height / 2;
-      this.camera.bottom = -height / 2;
-      this.camera.updateProjectionMatrix();
-    }
-
-    this.yaw.position.set(state.x - width / 2, height / 2 - state.y, 0);
+    this.canvas.style.left = (state.x - VIEW_SIZE / 2) + 'px';
+    this.canvas.style.top = (state.y - VIEW_SIZE / 2) + 'px';
+    this.yaw.position.set(0, 0, 0);
     this.yaw.rotation.z = -state.heading;
     this.attitude.rotation.set(state.pitch, 0, state.bank, 'ZYX');
     this.yaw.scale.setScalar(72 * state.scale);
@@ -79,10 +71,8 @@ export class Plane3DRenderer {
     if (this.modelReady && !this.visibilityChecked) {
       this.visibilityChecked = true;
       const gl = this.renderer.getContext(), side = 31, pixels = new Uint8Array(side * side * 4);
-      const centerX = Math.round(state.x * this.renderer.getPixelRatio());
-      const centerY = Math.round((height - state.y) * this.renderer.getPixelRatio());
-      const left = Math.max(0, Math.min(this.canvas.width - side, centerX - side / 2));
-      const bottom = Math.max(0, Math.min(this.canvas.height - side, centerY - side / 2));
+      const left = Math.round(VIEW_SIZE / 2 - side / 2);
+      const bottom = left;
       gl.readPixels(left, bottom, side, side, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
       if (pixels.some((value, i) => i % 4 === 3 && value > 0)) onLoad();
       else {

@@ -537,7 +537,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ================= 3D flight map ================= */
 #map3d { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity 1.4s ease; isolation: isolate; background: linear-gradient(180deg, #0a0c26, #170a2e); }
 #map3d.on { opacity: 1; }
-.m3-plane-canvas { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+.m3-plane-canvas { position: absolute; left: 0; top: 0; z-index: 3; width: 192px; height: 192px; pointer-events: none; }
 #app:not(.map-on) .m3-plane-canvas { visibility: hidden; }
 .m3-world, .m3-tint, .m3-screen, .m3-vig, .m3-fog { position: absolute; inset: 0; pointer-events: none; }
 .m3-world { overflow: hidden; isolation: isolate; z-index: 0; }

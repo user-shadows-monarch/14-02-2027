@@ -589,7 +589,7 @@
       g.fillStyle = mk; g.fillRect(0, 0, this.w, this.h * 0.24); g.restore();
       if (this.planeRenderer) this.planeRenderer.render({
         x: pz.x, y: pz.y, scale: pz.k, heading: angDiff(this.cam.heading, this.planeHeading),
-        bank: this.bank, pitch: this.pitchAng, width: this.w, height: this.h,
+        bank: this.bank, pitch: this.pitchAng,
         visible: this.showPlane && planeFade > 0.02, opacity: planeFade
       });
     }
