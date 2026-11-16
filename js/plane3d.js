@@ -3,7 +3,7 @@ import { GLTFLoader } from 'https://esm.sh/three@0.180.0/examples/jsm/loaders/GL
 
 export class Plane3DRenderer {
   constructor(onLoad, onError) {
-    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
     this.renderer.setClearColor(0x000000, 0);
     this.canvas = this.renderer.domElement;
 
