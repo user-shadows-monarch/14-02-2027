@@ -134,7 +134,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
 }
 .scene.active { opacity: 1; visibility: visible; transition-delay: 0s; }
-#s-map, #s-memory, #s-cross, #s-arrive { pointer-events: none; }
+#s-map, #s-flight, #s-memory, #s-cross, #s-arrive { pointer-events: none; }
 #s-map.active > *, #s-memory.active .sheet, #s-arrive.active .arrive-card { pointer-events: auto; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(14px); filter: blur(4px) } to { opacity: 1; transform: none; filter: none } }
