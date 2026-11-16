@@ -120,17 +120,20 @@
         + '<g fill="#ff8fb2"><rect x="30" y="93" width="1.600" height=".9" opacity=".9"/><rect x="34" y="93" width="1.600" height=".9" opacity=".5"/><rect x="38" y="93" width="1.600" height=".9" opacity=".9"/><rect x="60" y="93" width="1.600" height=".9" opacity=".5"/><rect x="64" y="93" width="1.600" height=".9" opacity=".9"/><rect x="68" y="93" width="1.600" height=".9" opacity=".5"/></g></svg>';
       canvas.parentNode.insertBefore(cock, canvas.nextSibling);
       this.cock = cock;
+      const lookSurface = document.createElement('div'); lookSurface.className = 'm3-look'; lookSurface.setAttribute('aria-hidden', 'true');
+      canvas.parentNode.insertBefore(lookSurface, cock.nextSibling);
+      this.lookSurface = lookSurface;
       new MutationObserver(() => { const on = canvas.classList.contains('on'); wrap.classList.toggle('on', on); cock.classList.toggle('on', on); }).observe(canvas, { attributes: true, attributeFilter: ['class'] });
 
       this.resize();
       addEventListener('resize', () => this.resize());
-      canvas.addEventListener('pointerdown', e => {
+      lookSurface.addEventListener('pointerdown', e => {
         if (!this.flying || (e.pointerType === 'mouse' && e.button !== 0)) return;
         this.lookPointer = { id: e.pointerId, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
-        canvas.setPointerCapture(e.pointerId);
+        lookSurface.setPointerCapture(e.pointerId);
         e.preventDefault();
       });
-      canvas.addEventListener('pointermove', e => {
+      lookSurface.addEventListener('pointermove', e => {
         const drag = this.lookPointer;
         if (!drag || drag.id !== e.pointerId || !this.flying) return;
         const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -140,17 +143,17 @@
         if (this.pov !== 'cockpit') this.setPov('cockpit');
         this.lookYaw = (this.lookYaw + dx * 0.008) % TAU;
         this.lookPitch = clamp(this.lookPitch + dy * 0.004, -1.2, 1.2);
-        canvas.classList.add('look-dragging');
+        lookSurface.classList.add('look-dragging');
         e.preventDefault();
       });
       const endLook = e => {
         if (this.lookPointer && this.lookPointer.id === e.pointerId) {
           this.lookPointer = null;
-          canvas.classList.remove('look-dragging');
+          lookSurface.classList.remove('look-dragging');
         }
       };
-      canvas.addEventListener('pointerup', endLook);
-      canvas.addEventListener('pointercancel', endLook);
+      lookSurface.addEventListener('pointerup', endLook);
+      lookSurface.addEventListener('pointercancel', endLook);
     }
 
     resize() {
@@ -601,7 +604,7 @@
     setFocus(f, ms) { const a = this.focusY; return this.anim(ms, e => { this.focusY = lerp(a, f, e); }); }
     fly(t0, t1, ms, zoomAt) {
       this.flying = true;
-      this.canvas.classList.add('lookable');
+      this.lookSurface.classList.add('lookable');
       const c = this.cam;
       return this.anim(ms, (e, k, now) => {
         const t = lerp(t0, t1, e); this.progress = t;
@@ -611,7 +614,7 @@
         this.emit(p.lat, p.lng, this.alt(t) + 3, now);
       }, easeSine).then(() => {
         this.flying = false; this.lookPointer = null;
-        this.canvas.classList.remove('lookable', 'look-dragging');
+        this.lookSurface.classList.remove('lookable', 'look-dragging');
       });
     }
   }
