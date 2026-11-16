@@ -63,6 +63,10 @@ raised glowing flight path, 3D pins and soft clouds over the real map. It uses o
 built-in graphics (no extra library). If you prefer the flat top-down map, set `view3d: false` in
 `js/config.js` (or add `?2d` to the address to compare). If anything goes wrong the page uses the flat map.
 
+**Plane view:** once the flight has started, an eye button (top-left) switches between the chase camera
+and the view from inside the plane (horizon, cockpit frame, the flight path running ahead). It switches
+back to the chase view automatically for the landing with the bouquet.
+
 ## 3. Preview on your computer
 
 Browsers block some features on `file://`, so use a tiny local server:
