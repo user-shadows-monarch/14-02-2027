@@ -75,12 +75,11 @@ After the final promise, **Explore Berlin together** opens a separate third-pers
 Schönfließer Straße 40, Berlin. Move with the on-screen joystick or WASD/arrow keys; drag to look
 around. Movement is limited to a 200 m radius. The flight plane and its renderer are unchanged.
 
-This scene uses Google Maps Platform Photorealistic 3D Tiles through CesiumJS. To enable it, create a
-billing-enabled Google Cloud project, enable the **Map Tiles API**, and create an API key restricted
-to your site's HTTP referrers and the Map Tiles API. Add the key to `walkWorld.google3dTilesApiKey`
-in `js/config.js`. This is a browser-visible key, so never use an unrestricted key. Google tile
-attribution is kept visible in the viewer. Without a configured key, the scene displays setup
-instructions rather than silently showing an empty map.
+The neighborhood uses OpenStreetMap-based vector tiles from OpenFreeMap, rendered with MapLibre GL.
+Buildings are simplified 3D extrusions, and a stylized avatar follows the player; this is not
+photorealistic imagery. No API key or billing account is needed. The map requires an internet
+connection, and visible map attribution is included in the scene. Building detail depends on the
+available OpenStreetMap data.
 
 ## 3. Preview on your computer
 
@@ -113,6 +112,6 @@ share.
 - Internet is needed for the map tiles and the Google fonts.
 - Map data © OpenStreetMap contributors, style © CARTO (credit is shown on the
   page). Fine for a personal gift; check their terms for anything commercial.
-- The Berlin walk-scene coordinates were resolved from OpenStreetMap address data
-  (© OpenStreetMap contributors); photorealistic tiles and their attribution are provided by Google.
+- The Berlin walk-scene coordinates and neighborhood data are based on
+  OpenStreetMap (© OpenStreetMap contributors); the vector tiles are provided by OpenFreeMap/OpenMapTiles.
 - Change the cities in `route` (config) to reuse this for another trip.

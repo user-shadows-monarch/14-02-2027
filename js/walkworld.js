@@ -8,66 +8,72 @@
   const retry = $('#walk-retry');
   const stick = $('#walk-stick');
   const knob = $('#walk-stick-knob');
-  const CESIUM_VERSION = '1.126';
-  const CESIUM_BASE = 'https://cesium.com/downloads/cesiumjs/releases/' + CESIUM_VERSION + '/Build/Cesium/';
+  const MAPLIBRE_VERSION = '5.6.1';
+  const MAPLIBRE_BASE = 'https://unpkg.com/maplibre-gl@' + MAPLIBRE_VERSION + '/dist/';
+  const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
   const radians = Math.PI / 180;
   let scriptLoad = null;
-  let viewer = null;
-  let tileset = null;
-  let entities = [];
+  let map = null;
+  let avatarMarker = null;
   let generation = 0;
   let active = false;
-  let tileErrorShown = false;
   let frameId = 0;
+  let loadTimeout = 0;
+  let rejectMapLoad = null;
   let lastFrame = 0;
-  let lastUpdate = 0;
   let pointer = null;
   let joystickPointer = null;
   let joystick = { x: 0, y: 0 };
   let keys = new Set();
-  let orbit = { heading: 0, pitch: -0.34 };
+  let cameraDirty = false;
+  let camera = { bearing: 0, pitch: 62 };
   let player = null;
 
   function setStatus(message) {
     status.textContent = message;
   }
 
-  function loadCesium() {
-    if (window.Cesium) return Promise.resolve(window.Cesium);
+  function loadMapLibre() {
+    if (window.maplibregl) return Promise.resolve(window.maplibregl);
     if (scriptLoad) return scriptLoad;
 
-    window.CESIUM_BASE_URL = CESIUM_BASE;
-    if (!document.getElementById('cesium-widgets-css')) {
+    if (!document.getElementById('maplibre-css')) {
       const link = document.createElement('link');
-      link.id = 'cesium-widgets-css';
+      link.id = 'maplibre-css';
       link.rel = 'stylesheet';
-      link.href = CESIUM_BASE + 'Widgets/widgets.css';
+      link.href = MAPLIBRE_BASE + 'maplibre-gl.css';
       document.head.appendChild(link);
     }
 
     scriptLoad = new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = CESIUM_BASE + 'Cesium.js';
-      script.onload = () => resolve(window.Cesium);
+      script.src = MAPLIBRE_BASE + 'maplibre-gl.js';
+      script.onload = () => resolve(window.maplibregl);
       script.onerror = () => {
         scriptLoad = null;
-        reject(new Error('CesiumJS could not be loaded.'));
+        reject(new Error('MapLibre GL JS could not be loaded.'));
       };
       document.head.appendChild(script);
     });
     return scriptLoad;
   }
 
-  function destroyViewer() {
+  function destroyMap() {
     if (frameId) cancelAnimationFrame(frameId);
     frameId = 0;
     lastFrame = 0;
-    lastUpdate = 0;
-    if (viewer && !viewer.isDestroyed()) viewer.destroy();
-    viewer = null;
-    tileset = null;
-    entities = [];
+    if (loadTimeout) clearTimeout(loadTimeout);
+    loadTimeout = 0;
+    if (rejectMapLoad) {
+      const reject = rejectMapLoad;
+      rejectMapLoad = null;
+      reject(new Error('Open map loading was cancelled.'));
+    }
+    if (avatarMarker) avatarMarker.remove();
+    avatarMarker = null;
+    if (map) map.remove();
+    map = null;
     host.replaceChildren();
   }
 
@@ -80,107 +86,106 @@
     joystickPointer = null;
     pointer = null;
     knob.style.transform = 'translate(0, 0)';
-    destroyViewer();
+    destroyMap();
   }
 
-  function makeViewer(Cesium) {
-    const map = new Cesium.Viewer(host, {
-      imageryProvider: false,
-      baseLayerPicker: false,
-      animation: false,
-      timeline: false,
-      geocoder: false,
-      homeButton: false,
-      navigationHelpButton: false,
-      sceneModePicker: false,
-      fullscreenButton: false,
-      selectionIndicator: false,
-      infoBox: false,
-      scene3DOnly: true,
-      requestRenderMode: true,
-      maximumRenderTimeChange: Infinity,
-      terrainProvider: new Cesium.EllipsoidTerrainProvider()
+  function makeMap(maplibregl) {
+    const instance = new maplibregl.Map({
+      container: host,
+      style: STYLE_URL,
+      center: [C.location.lng, C.location.lat],
+      zoom: 18,
+      pitch: camera.pitch,
+      bearing: camera.bearing,
+      maxPitch: 75,
+      minZoom: 17,
+      maxZoom: 19,
+      attributionControl: false,
+      dragPan: false,
+      dragRotate: false,
+      scrollZoom: false,
+      doubleClickZoom: false,
+      touchZoomRotate: false,
+      keyboard: false,
+      pitchWithRotate: false,
+      renderWorldCopies: false,
+      antialias: false
     });
-    map.resolutionScale = Math.min(window.devicePixelRatio || 1, 1.25);
-    map.scene.globe.show = false;
-    map.scene.screenSpaceCameraController.enableInputs = false;
-    map.camera.setView({
-      destination: Cesium.Cartesian3.fromDegrees(C.location.lng, C.location.lat, 150),
-      orientation: {
-        heading: 0,
-        pitch: Cesium.Math.toRadians(-55),
-        roll: 0
-      }
+
+    instance.addControl(new maplibregl.AttributionControl({
+      compact: true,
+      customAttribution: '© OpenStreetMap contributors © OpenMapTiles © OpenFreeMap'
+    }), 'bottom-left');
+    instance.on('error', event => {
+      if (event.error) console.error('[walk-world] Open map resource failed to load.', event.error);
     });
-    map.scene.requestRender();
-    return map;
+    return instance;
   }
 
-  function createCharacter(Cesium) {
-    const Color = Cesium.Color;
-    const parts = [
-      { kind: 'ellipsoid', offset: [0, 0, 1.2], radii: [0.30, 0.23, 0.52], color: '#572a58' },
-      { kind: 'ellipsoid', offset: [0, 0, 1.94], radii: [0.22, 0.22, 0.24], color: '#e5a984' },
-      { kind: 'cylinder', offset: [-0.39, 0, 1.31], length: 0.70, radius: 0.085, color: '#e5a984' },
-      { kind: 'cylinder', offset: [0.39, 0, 1.31], length: 0.70, radius: 0.085, color: '#e5a984' },
-      { kind: 'cylinder', offset: [-0.13, 0, 0.48], length: 0.82, radius: 0.12, color: '#292849' },
-      { kind: 'cylinder', offset: [0.13, 0, 0.48], length: 0.82, radius: 0.12, color: '#292849' }
-    ];
-    entities = parts.map((part, i) => {
-      const entity = { id: 'walk-character-' + i, position: Cesium.Cartesian3.ZERO };
-      if (part.kind === 'ellipsoid') {
-        entity.ellipsoid = {
-          radii: new Cesium.Cartesian3(part.radii[0], part.radii[1], part.radii[2]),
-          material: Color.fromCssColorString(part.color),
-          outline: true,
-          outlineColor: Color.fromCssColorString('#21172d')
-        };
-      } else {
-        entity.cylinder = {
-          length: part.length,
-          topRadius: part.radius * 0.88,
-          bottomRadius: part.radius,
-          slices: 8,
-          material: Color.fromCssColorString(part.color)
-        };
-      }
-      entity._walkOffset = part.offset;
-      return viewer.entities.add(entity);
+  function waitForMapLoad(instance) {
+    return new Promise((resolve, reject) => {
+      const onLoad = () => {
+        instance.off('load', onLoad);
+        clearTimeout(loadTimeout);
+        loadTimeout = 0;
+        rejectMapLoad = null;
+        resolve();
+      };
+      rejectMapLoad = error => {
+        instance.off('load', onLoad);
+        clearTimeout(loadTimeout);
+        loadTimeout = 0;
+        rejectMapLoad = null;
+        reject(error);
+      };
+      loadTimeout = setTimeout(() => {
+        if (rejectMapLoad) rejectMapLoad(new Error('Timed out loading the open 3D map.'));
+      }, 20000);
+      instance.on('load', onLoad);
     });
-    updateCharacter(Cesium);
   }
 
-  async function findGroundHeight(Cesium, run) {
-    const point = Cesium.Cartographic.fromDegrees(C.location.lng, C.location.lat);
-    for (let attempt = 0; attempt < 4; attempt++) {
-      if (!active || run !== generation) return null;
-      try {
-        const samples = await viewer.scene.sampleHeightMostDetailed([point]);
-        const height = samples[0] && samples[0].height;
-        if (Number.isFinite(height)) return { height, approximate: false };
-      } catch {
-        console.warn('[walk-world] Could not sample 3D tile height; using the configured street elevation.');
-        return { height: C.location.groundHeight, approximate: true };
-      }
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    return { height: C.location.groundHeight, approximate: true };
+  function makeAvatar(maplibregl) {
+    const element = document.createElement('div');
+    element.className = 'walk-avatar';
+    element.setAttribute('aria-hidden', 'true');
+    element.innerHTML =
+      '<svg class="walk-avatar-body" viewBox="0 0 64 92" xmlns="http://www.w3.org/2000/svg">'
+      + '<ellipse cx="32" cy="87" rx="17" ry="4" fill="rgba(12,10,26,.42)"/>'
+      + '<path d="M22 56 18 78q0 4 5 4l8-21m11-5 4 23q0 4-5 4l-8-24" fill="#26263f" stroke="#151629" stroke-width="2" stroke-linejoin="round"/>'
+      + '<path d="m22 34-8 20q-1 4 3 6t6-3l9-15m10-8 8 20q1 4-3 6t-6-3l-9-15" fill="#dca184" stroke="#9e6d65" stroke-width="2" stroke-linejoin="round"/>'
+      + '<path d="M21 34q11-8 22 0l4 24q-15 9-30 0z" fill="#8f416e" stroke="#4a274d" stroke-width="2"/>'
+      + '<path d="M25 14q7-7 14 0l4 11q-5 9-12 9t-11-9z" fill="#e7ae89" stroke="#a87569" stroke-width="2"/>'
+      + '<path d="M24 14q8-11 17 0l-2 3H25z" fill="#342943"/>'
+      + '<path d="M17 51 9 67m38-16 8 16" stroke="#dca184" stroke-width="5" stroke-linecap="round"/>'
+      + '<path d="m18 78-2 7q0 3 4 3h8q3-1 2-4l-7-5m18-1 2 7q0 3-4 3h-8q-3-1-2-4l6-5" fill="#f3d9d3"/>'
+      + '</svg>';
+
+    avatarMarker = new maplibregl.Marker({
+      element,
+      anchor: 'bottom',
+      pitchAlignment: 'viewport',
+      rotationAlignment: 'viewport'
+    }).setLngLat([player.lng, player.lat]).addTo(map);
+    return element;
   }
 
-  function updateCharacter(Cesium) {
-    if (!player || !entities.length) return;
-    const base = Cesium.Cartesian3.fromDegrees(player.lng, player.lat, player.height);
-    const frame = Cesium.Transforms.eastNorthUpToFixedFrame(base);
-    const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-      base,
-      new Cesium.HeadingPitchRoll(player.heading, 0, 0)
-    );
-    entities.forEach(entity => {
-      const offset = entity._walkOffset;
-      const local = new Cesium.Cartesian3(offset[0], offset[1], offset[2]);
-      entity.position = Cesium.Matrix4.multiplyByPoint(frame, local, new Cesium.Cartesian3());
-      entity.orientation = orientation;
+  function getCameraPadding() {
+    return { top: Math.round(host.clientHeight * 0.18), right: 0, bottom: 0, left: 0 };
+  }
+
+  function updateCamera() {
+    if (!map || !player) return;
+    map.jumpTo({
+      center: [player.lng, player.lat],
+      zoom: 18,
+      pitch: camera.pitch,
+      bearing: camera.bearing,
+      padding: getCameraPadding()
     });
+    avatarMarker.setLngLat([player.lng, player.lat]);
+    avatarMarker.setRotation(player.heading);
+    cameraDirty = false;
   }
 
   function readInput() {
@@ -195,19 +200,17 @@
     return { forward: -y, right: x };
   }
 
-  function movePlayer(Cesium, dt) {
+  function movePlayer(dt) {
     const input = readInput();
-    if (!input.forward && !input.right) return;
-    const direction = orbit.heading;
-    const east = (input.forward * Math.sin(direction) + input.right * Math.cos(direction)) * C.walkSpeedMetersPerSecond * dt;
-    const north = (input.forward * Math.cos(direction) - input.right * Math.sin(direction)) * C.walkSpeedMetersPerSecond * dt;
+    if (!input.forward && !input.right) return false;
+    const bearing = camera.bearing * radians;
+    const speed = C.walkSpeedMetersPerSecond * dt;
+    const east = (input.forward * Math.sin(bearing) + input.right * Math.cos(bearing)) * speed;
+    const north = (input.forward * Math.cos(bearing) - input.right * Math.sin(bearing)) * speed;
     const cosLat = Math.max(0.01, Math.cos(player.lat * radians));
     player.lat += north / 111132;
     player.lng += east / (111320 * cosLat);
-    if (Math.hypot(east, north) > 0) {
-      player.heading = Math.atan2(east, north);
-      orbit.heading = player.heading;
-    }
+    if (Math.hypot(east, north) > 0) player.heading = Math.atan2(east, north) / radians;
 
     const northFromStart = (player.lat - C.location.lat) * 111132;
     const eastFromStart = (player.lng - C.location.lng) * 111320 * Math.cos(C.location.lat * radians);
@@ -217,104 +220,67 @@
       player.lat = C.location.lat + (northFromStart * scale) / 111132;
       player.lng = C.location.lng + (eastFromStart * scale) / (111320 * Math.cos(C.location.lat * radians));
     }
-    updateCharacter(Cesium);
+    return true;
   }
 
-  function updateCamera(Cesium) {
-    const target = Cesium.Cartesian3.fromDegrees(player.lng, player.lat, player.height + 1.1);
-    viewer.camera.lookAt(target, new Cesium.HeadingPitchRange(
-      orbit.heading,
-      orbit.pitch,
-      18
-    ));
-    viewer.scene.requestRender();
+  function scheduleFrame() {
+    if (active && !frameId) frameId = requestAnimationFrame(animate);
   }
 
-  function animate(now, Cesium) {
-    if (!active || !viewer) return;
+  function animate(now) {
+    frameId = 0;
+    if (!active || !map || !player) return;
+    const input = readInput();
+    const moving = !!(input.forward || input.right);
     if (!lastFrame) lastFrame = now;
-    const dt = Math.min((now - lastFrame) / 1000, 0.05);
-    lastFrame = now;
-    if (now - lastUpdate >= 33) {
-      movePlayer(Cesium, dt);
-      updateCamera(Cesium);
-      lastUpdate = now;
+    const elapsed = now - lastFrame;
+    if (elapsed < 33 && moving) {
+      scheduleFrame();
+      return;
     }
-    frameId = requestAnimationFrame(time => animate(time, Cesium));
+    const dt = Math.min(elapsed / 1000, 0.05);
+    lastFrame = now;
+
+    const moved = movePlayer(dt);
+    if (moved) makeAvatarMoving(true);
+    else makeAvatarMoving(false);
+    if (moved || cameraDirty) updateCamera();
+    if (moving) scheduleFrame();
+  }
+
+  function makeAvatarMoving(moving) {
+    const element = avatarMarker && avatarMarker.getElement();
+    if (element) element.classList.toggle('is-moving', moving);
   }
 
   async function start() {
     stop();
     const run = generation;
     active = true;
-    tileErrorShown = false;
     section.classList.add('walk-unavailable');
     retry.hidden = true;
     setStatus(C.loading);
 
-    if (!C.google3dTilesApiKey) {
-      active = false;
-      setStatus(C.missingKey);
-      return;
-    }
-
     try {
-      const Cesium = await loadCesium();
+      const maplibregl = await loadMapLibre();
       if (!active || run !== generation) return;
-      viewer = makeViewer(Cesium);
-      const url = 'https://tile.googleapis.com/v1/3dtiles/root.json?key=' + encodeURIComponent(C.google3dTilesApiKey);
-      tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
-        maximumScreenSpaceError: 20,
-        cacheBytes: 64 * 1024 * 1024,
-        showCreditsOnScreen: true
-      });
-      if (!active || run !== generation) {
-        destroyViewer();
-        return;
-      }
-      viewer.scene.primitives.add(tileset);
-      tileset.tileFailed.addEventListener(() => {
-        if (run !== generation || tileErrorShown) return;
-        tileErrorShown = true;
-        active = false;
-        if (frameId) cancelAnimationFrame(frameId);
-        keys.clear();
-        section.classList.add('walk-unavailable');
-        console.error('[walk-world] Google 3D Tiles request failed; check the API key, billing, and referrer restrictions.');
-        setStatus(C.tileError);
-        retry.hidden = false;
-      });
-      viewer.scene.renderError.addEventListener(() => {
-        if (run !== generation) return;
-        active = false;
-        if (frameId) cancelAnimationFrame(frameId);
-        keys.clear();
-        section.classList.add('walk-unavailable');
-        console.error('[walk-world] CesiumJS could not render the 3D scene.');
-        setStatus(C.loadError);
-        retry.hidden = false;
-      });
+      camera = { bearing: 0, pitch: 62 };
+      map = makeMap(maplibregl);
+      await waitForMapLoad(map);
+      if (!active || run !== generation) return;
 
-      const ground = await findGroundHeight(Cesium, run);
-      if (!active || run !== generation || !ground) return;
-      player = {
-        lat: C.location.lat,
-        lng: C.location.lng,
-        height: ground.height,
-        heading: 0
-      };
-      orbit = { heading: 0, pitch: -0.34 };
-      createCharacter(Cesium);
-      updateCamera(Cesium);
+      player = { lat: C.location.lat, lng: C.location.lng, heading: 0 };
+      makeAvatar(maplibregl);
+      map.resize();
+      updateCamera();
       section.classList.remove('walk-unavailable');
-      setStatus(C.controls + (ground.approximate ? ' · ' + C.approximateGround : ''));
-      frameId = requestAnimationFrame(time => animate(time, Cesium));
-    } catch {
+      setStatus(C.controls);
+    } catch (error) {
       if (!active || run !== generation) return;
-      console.error('[walk-world] The photorealistic 3D scene could not be initialized.');
+      console.error('[walk-world] The open 3D neighborhood could not be initialized.', error);
       active = false;
       section.classList.add('walk-unavailable');
-      destroyViewer();
+      destroyMap();
       setStatus(C.loadError);
       retry.hidden = false;
     }
@@ -325,6 +291,7 @@
     joystickPointer = event.pointerId;
     stick.setPointerCapture(event.pointerId);
     updateJoystick(event);
+    scheduleFrame();
   });
   stick.addEventListener('pointermove', event => {
     if (event.pointerId === joystickPointer) updateJoystick(event);
@@ -349,6 +316,7 @@
     const y = dy * scale;
     joystick = { x: x / max, y: y / max };
     knob.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+    scheduleFrame();
   }
 
   host.addEventListener('pointerdown', event => {
@@ -362,8 +330,10 @@
     const dy = event.clientY - pointer.y;
     pointer.x = event.clientX;
     pointer.y = event.clientY;
-    orbit.heading -= dx * 0.006;
-    orbit.pitch = clamp(orbit.pitch + dy * 0.004, -1.05, -0.12);
+    camera.bearing = (camera.bearing - dx * 0.32 + 360) % 360;
+    camera.pitch = clamp(camera.pitch + dy * 0.2, 45, 72);
+    cameraDirty = true;
+    scheduleFrame();
   });
   function releaseLook(event) {
     if (pointer && pointer.id === event.pointerId) pointer = null;
@@ -372,16 +342,21 @@
   host.addEventListener('pointercancel', releaseLook);
 
   addEventListener('keydown', event => {
-    if (!active || event.target.closest('button,input,textarea')) return;
+    if (!active || (event.target.closest && event.target.closest('button,input,textarea'))) return;
     if (/^(ArrowUp|ArrowDown|ArrowLeft|ArrowRight|w|a|s|d)$/i.test(event.key)) {
       event.preventDefault();
       keys.add(event.key);
+      scheduleFrame();
     }
   });
   addEventListener('keyup', event => keys.delete(event.key));
   addEventListener('blur', () => keys.clear());
   addEventListener('resize', () => {
-    if (active && viewer) { viewer.resize(); viewer.scene.requestRender(); }
+    if (active && map) {
+      map.resize();
+      cameraDirty = true;
+      scheduleFrame();
+    }
   });
 
   window.WalkWorld = { start, stop };

@@ -192,22 +192,17 @@ window.GIFT = {
 
   walkWorld: {
     enabled: true,
-    google3dTilesApiKey: "",
     location: {
       name: "Schönfließer Straße 40, Berlin",
       lat: 52.6422985,
-      lng: 13.2950298,
-      groundHeight: 50
+      lng: 13.2950298
     },
     radiusMeters: 200,
     walkSpeedMetersPerSecond: 1.6,
     button: "Explore Berlin together",
     close: "Back to our promise",
-    loading: "Loading the photorealistic 3D world…",
+    loading: "Loading the 3D neighborhood…",
     controls: "Drag to look · Move with the joystick or WASD · 200 m radius",
-    approximateGround: "Street height is approximate.",
-    missingKey: "Add a restricted Google Maps Platform API key in js/config.js to load the 3D world.",
-    loadError: "The 3D world could not load. Check the API key, billing, network, and referrer restrictions.",
-    tileError: "Google 3D Tiles returned an error. Check that the Map Tiles API is enabled for this key."
+    loadError: "The 3D map could not load. Check your internet connection and try again."
   }
 };

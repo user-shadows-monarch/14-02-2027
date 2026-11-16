@@ -441,10 +441,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #s-world { z-index: 8; display: block; overflow: hidden; background: #101523; touch-action: none; }
 #app[data-scene="s-world"] #sound { display: none; }
 #walk-world { position: absolute; inset: 0; overflow: hidden; }
-#walk-world .cesium-viewer, #walk-world .cesium-widget { position: absolute; inset: 0; width: 100%; height: 100%; }
-#walk-world canvas { display: block; width: 100%; height: 100%; }
-#walk-world .cesium-viewer-bottom { bottom: 4px; left: 140px; right: 6px; }
-#walk-world .cesium-credit-logoContainer, #walk-world .cesium-credit-textContainer { color: #fff; text-shadow: 0 1px 3px #000; }
+#walk-world .maplibregl-map, #walk-world .maplibregl-canvas-container { position: absolute; inset: 0; width: 100%; height: 100%; }
+#walk-world .maplibregl-canvas { display: block; width: 100%; height: 100%; }
+#walk-world .maplibregl-ctrl-bottom-left { bottom: 4px; left: 8px; }
+#walk-world .maplibregl-ctrl-attrib { background: rgba(8, 10, 28, .76); color: #fff; text-shadow: 0 1px 3px #000; }
+#walk-world .maplibregl-ctrl-attrib a { color: #ffe2ed; }
 .walk-ui { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .walk-top {
   position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px;
@@ -473,6 +474,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   margin: 0; padding: 8px 11px; border-radius: 14px; background: rgba(8, 10, 28, .68);
   color: #fff; font: 300 12px/1.4 var(--sans); text-align: right;
 }
+.walk-avatar { width: 42px; height: 62px; pointer-events: none; }
+.walk-avatar-body { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .6)); }
+.walk-avatar.is-moving .walk-avatar-body { animation: walk-bob .28s ease-in-out infinite alternate; }
+@keyframes walk-bob { to { transform: translateY(-2px) rotate(2deg); } }
 .walk-unavailable .walk-stick, .walk-unavailable .walk-controls { display: none; }
 .walk-retry { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 .walk-retry:active { transform: translate(-50%, -50%) scale(.97); }
@@ -489,7 +494,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   #walk-exit { padding: 10px; font-size: 12px; }
   .walk-stick { left: 12px; width: 96px; height: 96px; }
   .walk-controls { right: 8px; max-width: 54%; font-size: 11px; }
-  #walk-world .cesium-viewer-bottom { left: 112px; }
+  #walk-world .maplibregl-ctrl-bottom-left { left: 112px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
