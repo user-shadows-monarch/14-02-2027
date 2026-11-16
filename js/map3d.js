@@ -191,9 +191,17 @@
       const heading = c.heading + e * this.lookYaw;
       this.ep = ep;
       this.ca = Math.cos(heading); this.sa = Math.sin(heading); this.cp = Math.cos(ep); this.sp = Math.sin(ep);
-      const base = this.project(c.lat, c.lng, c.zoom), off = e * this.D * Math.sin(anchorPitch);
-      this.cz0 = base;
-      this.cz = { x: base.x + Math.sin(c.heading) * off, y: base.y - Math.cos(c.heading) * off };
+      const base = this.project(c.lat, c.lng, c.zoom);
+      const planePos = this.pathAt(this.progress), plane = this.project(planePos.lat, planePos.lng, c.zoom);
+      if (this.flying && (this.pov === 'cockpit' || Math.abs(this.lookYaw) > 0.001 || Math.abs(this.lookPitch) > 0.001)) {
+        const orbit = Math.max(32, this.D * 0.16 + this.curAlt * 0.75);
+        this.cz0 = plane;
+        this.cz = { x: plane.x + Math.sin(heading) * orbit, y: plane.y - Math.cos(heading) * orbit };
+      } else {
+        const off = e * this.D * Math.sin(anchorPitch);
+        this.cz0 = base;
+        this.cz = { x: base.x + Math.sin(c.heading) * off, y: base.y - Math.cos(c.heading) * off };
+      }
       this.roll = e * clamp(this.bank * 0.9, -0.4, 0.4); this.cr = Math.cos(this.roll); this.sr = Math.sin(this.roll);
     }
     pg(gx, gy, gz) {
