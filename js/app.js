@@ -441,6 +441,7 @@
     pv.classList.toggle('active', c); pv.setAttribute('aria-pressed', c);
     pv.setAttribute('aria-label', c ? 'Switch to chase view' : 'Switch to plane view');
   }
+  if (Use3D) map.canvas.addEventListener('povchange', syncPov);
   $('#pov').addEventListener('click', () => { if (!Use3D) return; map.setPov(map.pov === 'cockpit' ? 'chase' : 'cockpit'); syncPov(); });
   $('#sound').addEventListener('click', e => {
     const m = window.Music.toggleMute();

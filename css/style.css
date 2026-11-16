@@ -120,6 +120,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 #map { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s ease; }
 #map.on { opacity: 1; }
+#app.map-on #map { touch-action: none; }
+#map.lookable { cursor: grab; }
+#map.lookable.look-dragging { cursor: grabbing; }
 #fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
 
 /* ---------- scenes ---------- */

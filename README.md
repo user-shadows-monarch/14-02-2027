@@ -65,7 +65,9 @@ built-in graphics (no extra library). If you prefer the flat top-down map, set `
 
 **Plane view:** once the flight has started, an eye button (top-left) switches between the chase camera
 and the view from inside the plane (horizon, cockpit frame, the flight path running ahead). It switches
-back to the chase view automatically for the landing with the bouquet.
+back to the chase view automatically for the landing with the bouquet. While the plane is flying, drag
+on the map with a mouse or touch to look freely around; dragging automatically enters plane view. You
+can turn all the way around horizontally, and drag vertically to look up or down.
 
 ## 3. Preview on your computer
 
