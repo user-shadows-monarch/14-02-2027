@@ -1,8 +1,8 @@
-/* 3D flight map.
+/* 3D flight map, no libraries.
    - The ground is the same real map tiles, laid on a tilted plane with a perspective camera (CSS 3D matrix),
      so it needs no special permissions from the tile servers.
-   - The canvas draws the raised glowing flight path, 3D pins, clouds and sparkles; plane3d.js renders the
-     textured aircraft into it.
+   - A second canvas on top draws everything that stands above the ground with the SAME camera maths:
+     the raised glowing flight path, 3D pins, clouds, sparkles and a lit 3D airliner.
    It exposes the same interface as the flat map (map.js), so the rest of the page works unchanged. */
 (function () {
   'use strict';
@@ -97,7 +97,6 @@
       this.layers = new Map(); this.seq = 10; this.lastNow = 0; this.planeXY = { x: 0, y: 0 };
       this.pov = 'chase'; this.povBlend = 0; this.ep = this.cam.pitch; this.cr = 1; this.sr = 0; this.roll = 0; this.curAlt = 0; this.cz0 = { x: 0, y: 0 }; this._lastE = -1;
       this.mesh = buildPlane();
-      this.planeRenderer = null; this.planeRendererLoaded = false; this.planeRendererRequested = false;
       this.clouds = this.makeClouds();
 
       const wrap = document.createElement('div'); wrap.id = 'map3d';
@@ -486,31 +485,30 @@
       const halo = g.createRadialGradient(centre.x, centre.y, 4, centre.x, centre.y, 54);
       halo.addColorStop(0, 'rgba(255,120,175,.5)'); halo.addColorStop(1, 'rgba(255,120,175,0)');
       g.fillStyle = halo; g.beginPath(); g.arc(centre.x, centre.y, 54, 0, TAU); g.fill();
-      if (!this.planeRendererLoaded) {
-        const faces = this.mesh.map(f => {
-          const v = f.p.map(([ax, ay, az]) => {
-            const x0 = ax * PS, y0 = ay * PS, z0 = az * PS;
-            let x = x0 * cb + z0 * sb, z = -x0 * sb + z0 * cb;                 // bank (about the nose axis)
-            const y = y0 * cpi - z * spi; z = y0 * spi + z * cpi;              // pitch
-            return [pos.x + x * ch + y * sh, pos.y + x * sh - y * ch, alt + z];
-          });
-          const e1 = [v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2]], e2 = [v[2][0] - v[0][0], v[2][1] - v[0][1], v[2][2] - v[0][2]];
-          let nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
-          const m = Math.hypot(nx, ny, nz) || 1; nx /= m; ny /= m; nz /= m;
-          const lit = Math.abs(nx * L[0] + ny * L[1] + nz * L[2]);
-          const sc = v.map(q => this.pg(q[0], q[1], q[2]));
-          return { sc, lit, c: f.c, z: sc.reduce((a, q) => a + q.z, 0) / sc.length };
+      // faces
+      const faces = this.mesh.map(f => {
+        const v = f.p.map(([ax, ay, az]) => {
+          const x0 = ax * PS, y0 = ay * PS, z0 = az * PS;
+          let x = x0 * cb + z0 * sb, z = -x0 * sb + z0 * cb;                 // bank (about the nose axis)
+          const y = y0 * cpi - z * spi; z = y0 * spi + z * cpi;              // pitch
+          return [pos.x + x * ch + y * sh, pos.y + x * sh - y * ch, alt + z];
         });
-        faces.sort((a, b) => b.z - a.z);
-        g.save(); g.lineJoin = 'round'; g.lineWidth = 0.7; g.strokeStyle = 'rgba(120,40,90,.4)';
-        g.shadowColor = 'rgba(255,45,117,.55)'; g.shadowBlur = 10;
-        faces.forEach(fc => {
-          const k = 0.5 + 0.55 * fc.lit;
-          g.fillStyle = 'rgb(' + Math.min(255, fc.c[0] * k | 0) + ',' + Math.min(255, fc.c[1] * k | 0) + ',' + Math.min(255, fc.c[2] * k | 0) + ')';
-          g.beginPath(); fc.sc.forEach((q, i) => (i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y))); g.closePath(); g.fill(); g.stroke();
-        });
-        g.restore();
-      }
+        const e1 = [v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2]], e2 = [v[2][0] - v[0][0], v[2][1] - v[0][1], v[2][2] - v[0][2]];
+        let nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
+        const m = Math.hypot(nx, ny, nz) || 1; nx /= m; ny /= m; nz /= m;
+        const lit = Math.abs(nx * L[0] + ny * L[1] + nz * L[2]);
+        const sc = v.map(q => this.pg(q[0], q[1], q[2]));
+        return { sc, lit, c: f.c, z: sc.reduce((a, q) => a + q.z, 0) / sc.length };
+      });
+      faces.sort((a, b) => b.z - a.z);
+      g.save(); g.lineJoin = 'round'; g.lineWidth = 0.7; g.strokeStyle = 'rgba(120,40,90,.4)';
+      g.shadowColor = 'rgba(255,45,117,.55)'; g.shadowBlur = 10;
+      faces.forEach(fc => {
+        const k = 0.5 + 0.55 * fc.lit;
+        g.fillStyle = 'rgb(' + Math.min(255, fc.c[0] * k | 0) + ',' + Math.min(255, fc.c[1] * k | 0) + ',' + Math.min(255, fc.c[2] * k | 0) + ')';
+        g.beginPath(); fc.sc.forEach((q, i) => (i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y))); g.closePath(); g.fill(); g.stroke();
+      });
+      g.restore();
       this.planeXY = { x: centre.x, y: centre.y };
     }
 
@@ -577,43 +575,23 @@
       const pz = this.pg(gpos.x, gpos.y, alt);
       this.planeXY = { x: pz.x, y: pz.y };
       const planeFade = 1 - clamp(this.povBlend * 1.6, 0, 1);
-      if (this.showPlane && planeFade > 0.02) items.push({ z: pz.z, f: () => {
-        g.save(); g.globalAlpha = planeFade; this.drawPlane(now, gpos, alt);
-        g.restore();
-      } });
+      if (this.showPlane && planeFade > 0.02) items.push({ z: pz.z, f: () => { g.save(); g.globalAlpha = planeFade; this.drawPlane(now, gpos, alt); g.restore(); } });
       items.sort((a, b) => b.z - a.z).forEach(it => it.f());
       // distant things dissolve into the horizon haze at the top of the screen
       g.save(); g.globalCompositeOperation = 'destination-out';
       const mk = g.createLinearGradient(0, 0, 0, this.h * 0.24);
       mk.addColorStop(0, 'rgba(0,0,0,1)'); mk.addColorStop(0.55, 'rgba(0,0,0,.85)'); mk.addColorStop(1, 'rgba(0,0,0,0)');
       g.fillStyle = mk; g.fillRect(0, 0, this.w, this.h * 0.24); g.restore();
-      if (this.planeRenderer) this.planeRenderer.render({
-        x: pz.x, y: pz.y, scale: pz.k, heading: angDiff(this.cam.heading, this.planeHeading),
-        bank: this.bank, pitch: this.pitchAng,
-        visible: this.showPlane && planeFade > 0.02, opacity: planeFade
-      });
     }
 
     start() {
       if (this.running) return;
-      this.loadPlaneRenderer();
       this.running = true; this.lastNow = 0;
       if (!this.warned) { this.warned = true; setTimeout(() => { if (!this.tilesSeen && window.console) console.warn('[gift] No map tiles loaded. Check js/config.js > tiles, and open the page from a web address (not by double-clicking the file).'); }, 12000); }
       const loop = now => { if (!this.running) return; this.frame(now); this.raf = requestAnimationFrame(loop); };
       this.raf = requestAnimationFrame(loop);
     }
     stop() { this.running = false; cancelAnimationFrame(this.raf); }
-
-    loadPlaneRenderer() {
-      if (this.planeRendererRequested) return;
-      this.planeRendererRequested = true;
-      import('./plane3d.js').then(({ Plane3DRenderer }) => {
-        this.planeRenderer = new Plane3DRenderer(this.canvas, () => { this.planeRendererLoaded = true; }, err => {
-          this.planeRenderer = null; this.planeRendererLoaded = false;
-          console.warn('[gift] 3D plane model unavailable; using the built-in plane.', err);
-        });
-      }).catch(err => console.warn('[gift] 3D plane renderer unavailable; using the built-in plane.', err));
-    }
 
     /* ---------- animation helpers (same API as the flat map) ---------- */
     anim(ms, fn, ease) {
