@@ -537,6 +537,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ================= 3D flight map ================= */
 #map3d { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity 1.4s ease; isolation: isolate; background: linear-gradient(180deg, #0a0c26, #170a2e); }
 #map3d.on { opacity: 1; }
+.m3-plane-canvas { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+#app:not(.map-on) .m3-plane-canvas { visibility: hidden; }
 .m3-world, .m3-tint, .m3-screen, .m3-vig, .m3-fog { position: absolute; inset: 0; pointer-events: none; }
 .m3-world { overflow: hidden; isolation: isolate; z-index: 0; }
 .m3-tint, .m3-screen, .m3-vig, .m3-fog { z-index: 1; }
@@ -551,7 +553,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .m3-haze { z-index: 1; opacity: 0; will-change: transform;
   background: linear-gradient(180deg, #060822 0, #14083a calc(var(--hy, 300px) - 170px), #5a2486 calc(var(--hy, 300px) - 40px), rgba(255, 130, 175, .6) var(--hy, 300px), rgba(150, 50, 150, .3) calc(var(--hy, 300px) + 70px), rgba(150, 50, 150, 0) calc(var(--hy, 300px) + 190px)); }
 .m3-fog { transition: none; }
-.m3-cockpit { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.m3-cockpit { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; }
 .m3-cockpit:not(.on) { visibility: hidden; }
 .m3-cockpit svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .m3-look { position: absolute; inset: 0; z-index: 5; pointer-events: none; touch-action: none; }

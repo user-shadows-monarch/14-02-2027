@@ -579,13 +579,6 @@
       const planeFade = 1 - clamp(this.povBlend * 1.6, 0, 1);
       if (this.showPlane && planeFade > 0.02) items.push({ z: pz.z, f: () => {
         g.save(); g.globalAlpha = planeFade; this.drawPlane(now, gpos, alt);
-        if (this.planeRendererLoaded) {
-          this.planeRenderer.render({
-            x: pz.x, y: pz.y, scale: pz.k, heading: angDiff(this.cam.heading, this.planeHeading),
-            bank: this.bank, pitch: this.pitchAng, width: this.w, height: this.h
-          });
-          g.drawImage(this.planeRenderer.canvas, 0, 0, this.w, this.h);
-        }
         g.restore();
       } });
       items.sort((a, b) => b.z - a.z).forEach(it => it.f());
@@ -594,6 +587,11 @@
       const mk = g.createLinearGradient(0, 0, 0, this.h * 0.24);
       mk.addColorStop(0, 'rgba(0,0,0,1)'); mk.addColorStop(0.55, 'rgba(0,0,0,.85)'); mk.addColorStop(1, 'rgba(0,0,0,0)');
       g.fillStyle = mk; g.fillRect(0, 0, this.w, this.h * 0.24); g.restore();
+      if (this.planeRenderer) this.planeRenderer.render({
+        x: pz.x, y: pz.y, scale: pz.k, heading: angDiff(this.cam.heading, this.planeHeading),
+        bank: this.bank, pitch: this.pitchAng, width: this.w, height: this.h,
+        visible: this.showPlane && planeFade > 0.02, opacity: planeFade
+      });
     }
 
     start() {
@@ -610,7 +608,7 @@
       if (this.planeRendererRequested) return;
       this.planeRendererRequested = true;
       import('./plane3d.js').then(({ Plane3DRenderer }) => {
-        this.planeRenderer = new Plane3DRenderer(() => { this.planeRendererLoaded = true; }, err => {
+        this.planeRenderer = new Plane3DRenderer(this.canvas, () => { this.planeRendererLoaded = true; }, err => {
           this.planeRenderer = null; this.planeRendererLoaded = false;
           console.warn('[gift] 3D plane model unavailable; using the built-in plane.', err);
         });

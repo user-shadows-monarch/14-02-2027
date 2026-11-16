@@ -2,10 +2,12 @@ import * as THREE from 'https://esm.sh/three@0.180.0';
 import { GLTFLoader } from 'https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
 export class Plane3DRenderer {
-  constructor(onLoad, onError) {
-    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  constructor(mapCanvas, onLoad, onError) {
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     this.renderer.setClearColor(0x000000, 0);
     this.canvas = this.renderer.domElement;
+    this.canvas.className = 'm3-plane-canvas';
+    mapCanvas.parentNode.insertBefore(this.canvas, mapCanvas.nextSibling);
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
@@ -26,8 +28,11 @@ export class Plane3DRenderer {
     this.attitude.add(this.model);
     this.orientation.rotation.x = -Math.PI / 2;
     this.canvasSize = { width: 0, height: 0 };
+    this.modelReady = false;
+    this.visibilityChecked = false;
 
     const fail = err => {
+      this.canvas.remove();
       this.renderer.dispose();
       onError(err);
     };
@@ -46,7 +51,7 @@ export class Plane3DRenderer {
       aircraft.scale.setScalar(1 / span);
       this.model.add(aircraft);
       this.aircraft = aircraft;
-      onLoad();
+      this.modelReady = true;
     }, undefined, fail);
   }
 
@@ -68,7 +73,22 @@ export class Plane3DRenderer {
     this.yaw.rotation.z = -state.heading;
     this.attitude.rotation.set(state.pitch, 0, state.bank, 'ZYX');
     this.yaw.scale.setScalar(72 * state.scale);
-    this.yaw.visible = true;
+    this.yaw.visible = state.visible;
+    this.canvas.style.opacity = String(state.opacity);
     this.renderer.render(this.scene, this.camera);
+    if (this.modelReady && !this.visibilityChecked) {
+      this.visibilityChecked = true;
+      const gl = this.renderer.getContext(), side = 31, pixels = new Uint8Array(side * side * 4);
+      const centerX = Math.round(state.x * this.renderer.getPixelRatio());
+      const centerY = Math.round((height - state.y) * this.renderer.getPixelRatio());
+      const left = Math.max(0, Math.min(this.canvas.width - side, centerX - side / 2));
+      const bottom = Math.max(0, Math.min(this.canvas.height - side, centerY - side / 2));
+      gl.readPixels(left, bottom, side, side, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      if (pixels.some((value, i) => i % 4 === 3 && value > 0)) onLoad();
+      else {
+        fail(new Error('The aircraft model did not render visibly.'));
+        return;
+      }
+    }
   }
 }
