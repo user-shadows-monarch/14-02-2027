@@ -58,10 +58,11 @@ set `mic: false` (tap only) or change `blowSeconds` (how long she must blow).
 
 ### 3D flight
 
-The flight is 3D: a tilted camera follows behind a 3D plane that takes off, cruises and lands, with a
-raised glowing flight path, 3D pins and soft clouds over the real map. It uses only your browser's
-built-in graphics (no extra library). If you prefer the flat top-down map, set `view3d: false` in
-`js/config.js` (or add `?2d` to the address to compare). If anything goes wrong the page uses the flat map.
+The flight is 3D: a tilted camera follows a textured 3D aircraft model that takes off, cruises and lands,
+with a raised glowing flight path, 3D pins and soft clouds over the real map. The model is rendered with
+Three.js, loaded from its CDN, and falls back to the built-in aircraft if WebGL or the CDN is unavailable.
+The aircraft model's source and license are in `assets/plane/`. If you prefer the flat top-down map, set
+`view3d: false` in `js/config.js` (or add `?2d` to the address to compare).
 
 **Plane view:** once the flight has started, an eye button (top-left) switches between the chase camera
 and the view from inside the plane (horizon, cockpit frame, the flight path running ahead). It switches
