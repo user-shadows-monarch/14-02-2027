@@ -437,10 +437,59 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #s-promise.active #p-btn { animation: rise 1.4s 5.4s forwards; }
 .promise-actions .after { font-size: 34px; color: #fff; text-shadow: 0 0 22px rgba(255, 60, 140, .9); }
 
+/* ---------- walkable finale ---------- */
+#s-world { z-index: 8; display: block; overflow: hidden; background: #101523; touch-action: none; }
+#app[data-scene="s-world"] #sound { display: none; }
+#walk-world { position: absolute; inset: 0; overflow: hidden; }
+#walk-world .cesium-viewer, #walk-world .cesium-widget { position: absolute; inset: 0; width: 100%; height: 100%; }
+#walk-world canvas { display: block; width: 100%; height: 100%; }
+#walk-world .cesium-viewer-bottom { bottom: 4px; left: 140px; right: 6px; }
+#walk-world .cesium-credit-logoContainer, #walk-world .cesium-credit-textContainer { color: #fff; text-shadow: 0 1px 3px #000; }
+.walk-ui { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.walk-top {
+  position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.walk-top > div {
+  min-width: 0; padding: 10px 14px; border: 1px solid rgba(255, 150, 195, .38); border-radius: 18px;
+  background: rgba(8, 10, 28, .76); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.walk-top h2 { margin: 0; font: 500 16px/1.25 var(--sans); }
+.walk-top p { margin: 5px 0 0; font: 300 12px/1.35 var(--sans); color: #ffe2ed; }
+#walk-exit, #walk-retry { pointer-events: auto; padding: 11px 14px; font-size: 13px; white-space: nowrap; }
+.walk-stick {
+  position: absolute; left: 20px; bottom: calc(28px + env(safe-area-inset-bottom)); width: 112px; height: 112px;
+  display: grid; place-items: center; border: 1px solid rgba(255, 210, 230, .55); border-radius: 50%;
+  background: rgba(8, 10, 28, .42); box-shadow: inset 0 0 24px rgba(255, 110, 170, .15);
+  pointer-events: auto; touch-action: none; user-select: none;
+}
+.walk-stick i {
+  width: 44px; height: 44px; border: 1px solid rgba(255, 230, 240, .8); border-radius: 50%;
+  background: rgba(255, 90, 150, .62); box-shadow: 0 0 18px rgba(255, 45, 117, .45);
+  transform: translate(0, 0); pointer-events: none;
+}
+.walk-controls {
+  position: absolute; right: 14px; bottom: calc(38px + env(safe-area-inset-bottom)); max-width: 56%;
+  margin: 0; padding: 8px 11px; border-radius: 14px; background: rgba(8, 10, 28, .68);
+  color: #fff; font: 300 12px/1.4 var(--sans); text-align: right;
+}
+.walk-unavailable .walk-stick, .walk-unavailable .walk-controls { display: none; }
+.walk-retry { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.walk-retry:active { transform: translate(-50%, -50%) scale(.97); }
+
 @media (max-height: 640px) {
   .media { height: 110px; }
   .open-text { padding-top: 6vh; }
   .small { margin-top: 12px; }
+}
+@media (max-width: 360px) {
+  .walk-top { left: 8px; right: 8px; gap: 6px; }
+  .walk-top > div { padding: 9px 10px; }
+  .walk-top h2 { font-size: 14px; }
+  #walk-exit { padding: 10px; font-size: 12px; }
+  .walk-stick { left: 12px; width: 96px; height: 96px; }
+  .walk-controls { right: 8px; max-width: 54%; font-size: 11px; }
+  #walk-world .cesium-viewer-bottom { left: 112px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

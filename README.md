@@ -69,6 +69,19 @@ back to the chase view automatically for the landing with the bouquet. While the
 on the map with a mouse or touch to look freely around; dragging automatically enters plane view. You
 can turn all the way around horizontally, and drag vertically to look up or down.
 
+### Walkable 3D finale
+
+After the final promise, **Explore Berlin together** opens a separate third-person walking scene at
+Schönfließer Straße 40, Berlin. Move with the on-screen joystick or WASD/arrow keys; drag to look
+around. Movement is limited to a 200 m radius. The flight plane and its renderer are unchanged.
+
+This scene uses Google Maps Platform Photorealistic 3D Tiles through CesiumJS. To enable it, create a
+billing-enabled Google Cloud project, enable the **Map Tiles API**, and create an API key restricted
+to your site's HTTP referrers and the Map Tiles API. Add the key to `walkWorld.google3dTilesApiKey`
+in `js/config.js`. This is a browser-visible key, so never use an unrestricted key. Google tile
+attribution is kept visible in the viewer. Without a configured key, the scene displays setup
+instructions rather than silently showing an empty map.
+
 ## 3. Preview on your computer
 
 Browsers block some features on `file://`, so use a tiny local server:
@@ -100,4 +113,6 @@ share.
 - Internet is needed for the map tiles and the Google fonts.
 - Map data © OpenStreetMap contributors, style © CARTO (credit is shown on the
   page). Fine for a personal gift; check their terms for anything commercial.
+- The Berlin walk-scene coordinates were resolved from OpenStreetMap address data
+  (© OpenStreetMap contributors); photorealistic tiles and their attribution are provided by Google.
 - Change the cities in `route` (config) to reuse this for another trip.

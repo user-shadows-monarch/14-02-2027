@@ -43,7 +43,8 @@
     's-arrive':   { map: true, hud: true, fx: 'petals' },
     's-birthday': { bg: 'reveal',  fx: 'party' },
     's-final':    { bg: 'final',   fx: 'hearts' },
-    's-promise':  { bg: 'promise', fx: 'hearts' }
+    's-promise':  { bg: 'promise', fx: 'hearts' },
+    's-world':    { fx: 'none' }
   };
   let currentScene = null;
   function go(id) {
@@ -93,6 +94,10 @@
     $('#p-label').textContent = tpl(C.promise.button);
     $('#p-after').textContent = tpl(C.promise.after);
     $('#p-replay').textContent = tpl(C.promise.replay);
+    $('#p-explore').textContent = tpl(C.walkWorld.button);
+    $('#walk-title').textContent = tpl(C.walkWorld.location.name);
+    $('#walk-exit').textContent = tpl(C.walkWorld.close);
+    $('#walk-controls').textContent = tpl(C.walkWorld.controls);
     document.title = R.from.name + ' ✈ ' + R.to.name + ' · a journey for you';
   }
 
@@ -406,9 +411,21 @@
     $('#p-btn').hidden = true; $('#p-after').hidden = false;
     FX.fireworks(9); FX.confetti(undefined, undefined, 160);
     FX.set('party');
-    setTimeout(() => { $('#p-replay').hidden = false; }, 3500);
+    setTimeout(() => {
+      $('#p-explore').hidden = !C.walkWorld.enabled;
+      $('#p-replay').hidden = false;
+    }, 3500);
   });
   $('#p-replay').addEventListener('click', () => location.reload());
+  $('#p-explore').addEventListener('click', () => {
+    go('s-world');
+    window.WalkWorld.start();
+  });
+  $('#walk-exit').addEventListener('click', () => {
+    window.WalkWorld.stop();
+    go('s-promise');
+  });
+  $('#walk-retry').addEventListener('click', () => window.WalkWorld.start());
 
   /* ---------- wiring ---------- */
   function begin() {

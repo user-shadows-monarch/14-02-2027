@@ -247,7 +247,27 @@
     <div class="promise-actions">
       <button id="p-btn" class="pill wide"><span id="p-label"></span><i class="chev right"></i></button>
       <p class="poem after" id="p-after" hidden></p>
+      <button id="p-explore" class="pill wide" hidden></button>
       <button id="p-replay" class="ghost" hidden></button>
+    </div>
+  </section>
+
+  <!-- Walkable photorealistic finale -->
+  <section class="scene" id="s-world" aria-label="Walkable 3D world">
+    <div id="walk-world" aria-label="Photorealistic 3D map"></div>
+    <div class="walk-ui">
+      <div class="walk-top">
+        <div>
+          <h2 id="walk-title"></h2>
+          <p id="walk-status" aria-live="polite"></p>
+        </div>
+        <button id="walk-exit" class="pill" type="button"></button>
+      </div>
+      <div id="walk-stick" class="walk-stick" role="application" aria-label="Movement joystick">
+        <i id="walk-stick-knob"></i>
+      </div>
+      <p class="walk-controls" id="walk-controls"></p>
+      <button id="walk-retry" class="pill walk-retry" type="button" hidden>Try again</button>
     </div>
   </section>
 
@@ -261,6 +281,7 @@
 <script src="js/map3d.js"></script>
 <script src="js/extras.js"></script>
 <script src="js/blow.js"></script>
+<script src="js/walkworld.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
