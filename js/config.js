@@ -53,6 +53,19 @@ window.GIFT = {
      Set to false to use the flat top-down map instead. */
   view3d: true,
 
+  /* The walkable 3D street that opens after the promise (a stylized Berlin street).
+     time: "day" (like your photos), "sunset" or "night" (lamps and windows glow).  */
+  world: {
+    enabled: true,
+    time: "day",
+    title: "Our street",
+    hearts: true,
+    avatar: {},   // optional colours, e.g. { jacket: [0.2, 0.24, 0.46], scarf: [0.93, 0.3, 0.5] }
+    hintTouch: "Joystick to walk · drag to look around",
+    hintDesktop: "WASD or arrows to walk · drag to look · wheel to zoom · Shift to run",
+    finalMessage: "You found every memory we made. Wherever you are, I'm walking beside you. I love you ♥"
+  },
+
   opening: {
     title: ["A special journey", "for someone even more special…"],
     text: ["It's not just a birthday,", "it's also Valentine's Day.", "Two reasons to celebrate you."],
@@ -187,22 +200,7 @@ window.GIFT = {
     lines: ["No matter the distance,", "no matter the time…", "I'll always choose you."],
     button: "Forever & Always",
     after: "Forever & always.",
+    world: "Step into our world",
     replay: "Fly our journey again"
-  },
-
-  walkWorld: {
-    enabled: true,
-    location: {
-      name: "Schönfließer Straße 40, Berlin",
-      lat: 52.6422985,
-      lng: 13.2950298
-    },
-    radiusMeters: 200,
-    walkSpeedMetersPerSecond: 1.6,
-    button: "Explore Berlin together",
-    close: "Back to our promise",
-    loading: "Loading the 3D neighborhood…",
-    controls: "Drag to look · Move with the joystick or WASD · 200 m radius",
-    loadError: "The 3D map could not load. Check your internet connection and try again."
   }
 };

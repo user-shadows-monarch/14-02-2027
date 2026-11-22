@@ -65,21 +65,22 @@ built-in graphics (no extra library). If you prefer the flat top-down map, set `
 
 **Plane view:** once the flight has started, an eye button (top-left) switches between the chase camera
 and the view from inside the plane (horizon, cockpit frame, the flight path running ahead). It switches
-back to the chase view automatically for the landing with the bouquet. While the plane is flying, drag
-on the map with a mouse or touch to look freely around; dragging automatically enters plane view. You
-can turn all the way around horizontally, and drag vertically to look up or down.
+back to the chase view automatically for the landing with the bouquet.
 
-### Walkable 3D finale
+### The walkable 3D world (after the promise)
 
-After the final promise, **Explore Berlin together** opens a separate third-person walking scene at
-Schönfließer Straße 40, Berlin. Move with the on-screen joystick or WASD/arrow keys; drag to look
-around. Movement is limited to a 200 m radius. The flight plane and its renderer are unchanged.
+After the promise page, a button "Step into our world" opens a 3D street you can walk through: tall bare trees,
+white houses with picket fences, parked cars, lamps, a hedge, a dirt path and a scaffolded block in the park,
+with long shadows. Your avatar walks with a joystick (phone) or WASD / arrow keys (computer); drag to look around,
+mouse wheel to zoom, Shift to run. Six glowing hearts hide along the street: walking into one opens the matching
+memory (title, date, quote, photo). Find all six for a final message.
 
-The neighborhood uses OpenStreetMap-based vector tiles from OpenFreeMap, rendered with MapLibre GL.
-Buildings are simplified 3D extrusions, and a stylized avatar follows the player; this is not
-photorealistic imagery. No API key or billing account is needed. The map requires an internet
-connection, and visible map attribution is included in the scene. Building detail depends on the
-available OpenStreetMap data.
+- Your face on the avatar: it uses `assets/pilot/face.jpg` (same photo as the pilot).
+- In `js/config.js` > `world`: `time` ("day", "sunset" or "night"), the title, texts and avatar colours.
+  Try it quickly by adding `?wtime=sunset` or `?wtime=night` to the address.
+- It uses plain WebGL (no libraries). If a device cannot run it, the button simply does not appear.
+- It is a stylized recreation made from reference photos, not the photos themselves.
+  The street name and house number are not shown anywhere on the page.
 
 ## 3. Preview on your computer
 
@@ -112,6 +113,4 @@ share.
 - Internet is needed for the map tiles and the Google fonts.
 - Map data © OpenStreetMap contributors, style © CARTO (credit is shown on the
   page). Fine for a personal gift; check their terms for anything commercial.
-- The Berlin walk-scene coordinates and neighborhood data are based on
-  OpenStreetMap (© OpenStreetMap contributors); the vector tiles are provided by OpenFreeMap/OpenMapTiles.
 - Change the cities in `route` (config) to reuse this for another trip.

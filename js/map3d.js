@@ -91,7 +91,6 @@
       this.showRoute = true; this.showPlane = true; this.flying = false;
       this.sparks = []; this.anims = []; this.running = false;
       this.planeHeading = this.routeHeading(0); this.bank = 0; this.pitchAng = 0;
-      this.lookYaw = 0; this.lookPitch = 0; this.lookPointer = null;
       this.retina = (window.devicePixelRatio || 1) > 1.4;
       this.tilesSeen = 0; this.fails = 0; this.pi = 0; this.provs = providers(tileCfg);
       this.layers = new Map(); this.seq = 10; this.lastNow = 0; this.planeXY = { x: 0, y: 0 };
@@ -120,40 +119,10 @@
         + '<g fill="#ff8fb2"><rect x="30" y="93" width="1.600" height=".9" opacity=".9"/><rect x="34" y="93" width="1.600" height=".9" opacity=".5"/><rect x="38" y="93" width="1.600" height=".9" opacity=".9"/><rect x="60" y="93" width="1.600" height=".9" opacity=".5"/><rect x="64" y="93" width="1.600" height=".9" opacity=".9"/><rect x="68" y="93" width="1.600" height=".9" opacity=".5"/></g></svg>';
       canvas.parentNode.insertBefore(cock, canvas.nextSibling);
       this.cock = cock;
-      const lookSurface = document.createElement('div'); lookSurface.className = 'm3-look'; lookSurface.setAttribute('aria-hidden', 'true');
-      canvas.parentNode.insertBefore(lookSurface, cock.nextSibling);
-      this.lookSurface = lookSurface;
       new MutationObserver(() => { const on = canvas.classList.contains('on'); wrap.classList.toggle('on', on); cock.classList.toggle('on', on); }).observe(canvas, { attributes: true, attributeFilter: ['class'] });
 
       this.resize();
       addEventListener('resize', () => this.resize());
-      lookSurface.addEventListener('pointerdown', e => {
-        if (!this.flying || (e.pointerType === 'mouse' && e.button !== 0)) return;
-        this.lookPointer = { id: e.pointerId, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
-        lookSurface.setPointerCapture(e.pointerId);
-        e.preventDefault();
-      });
-      lookSurface.addEventListener('pointermove', e => {
-        const drag = this.lookPointer;
-        if (!drag || drag.id !== e.pointerId || !this.flying) return;
-        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-        drag.x = e.clientX; drag.y = e.clientY;
-        if (!drag.moved && Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) > 3) drag.moved = true;
-        if (!drag.moved) return;
-        if (this.pov !== 'cockpit') this.setPov('cockpit');
-        this.lookYaw = (this.lookYaw + dx * 0.008) % TAU;
-        this.lookPitch = clamp(this.lookPitch + dy * 0.004, -1.2, 1.2);
-        lookSurface.classList.add('look-dragging');
-        e.preventDefault();
-      });
-      const endLook = e => {
-        if (this.lookPointer && this.lookPointer.id === e.pointerId) {
-          this.lookPointer = null;
-          lookSurface.classList.remove('look-dragging');
-        }
-      };
-      lookSurface.addEventListener('pointerup', endLook);
-      lookSurface.addEventListener('pointercancel', endLook);
     }
 
     resize() {
@@ -186,22 +155,11 @@
         const cosv = clamp((this.curAlt + 16) / this.D, 0.02, 0.6);
         ep = lerp(c.pitch, Math.min(1.5, Math.acos(cosv) + this.pitchAng * 0.6), e);
       }
-      const anchorPitch = ep;
-      ep = clamp(ep + e * this.lookPitch, 0.08, 1.52);
-      const heading = c.heading + e * this.lookYaw;
       this.ep = ep;
-      this.ca = Math.cos(heading); this.sa = Math.sin(heading); this.cp = Math.cos(ep); this.sp = Math.sin(ep);
-      const base = this.project(c.lat, c.lng, c.zoom);
-      const planePos = this.pathAt(this.progress), plane = this.project(planePos.lat, planePos.lng, c.zoom);
-      if (this.flying && (this.pov === 'cockpit' || Math.abs(this.lookYaw) > 0.001 || Math.abs(this.lookPitch) > 0.001)) {
-        const orbit = Math.max(32, this.D * 0.16 + this.curAlt * 0.75);
-        this.cz0 = plane;
-        this.cz = { x: plane.x + Math.sin(heading) * orbit, y: plane.y - Math.cos(heading) * orbit };
-      } else {
-        const off = e * this.D * Math.sin(anchorPitch);
-        this.cz0 = base;
-        this.cz = { x: base.x + Math.sin(c.heading) * off, y: base.y - Math.cos(c.heading) * off };
-      }
+      this.ca = Math.cos(c.heading); this.sa = Math.sin(c.heading); this.cp = Math.cos(ep); this.sp = Math.sin(ep);
+      const base = this.project(c.lat, c.lng, c.zoom), off = e * this.D * this.sp;
+      this.cz0 = base;
+      this.cz = { x: base.x + this.sa * off, y: base.y - this.ca * off };
       this.roll = e * clamp(this.bank * 0.9, -0.4, 0.4); this.cr = Math.cos(this.roll); this.sr = Math.sin(this.roll);
     }
     pg(gx, gy, gz) {
@@ -224,7 +182,6 @@
     setPov(mode) {
       if (mode === this.pov) return;
       this.pov = mode;
-      this.canvas.dispatchEvent(new Event('povchange'));
       const a = this.povBlend, b = mode === 'cockpit' ? 1 : 0;
       this.anims = this.anims.filter(x => x.tag !== 'pov');
       this.anims.push({ start: performance.now(), ms: 1500, ease: easeInOut, fn: e => { this.povBlend = lerp(a, b, e); }, done() {}, tag: 'pov' });
@@ -612,7 +569,6 @@
     setFocus(f, ms) { const a = this.focusY; return this.anim(ms, e => { this.focusY = lerp(a, f, e); }); }
     fly(t0, t1, ms, zoomAt) {
       this.flying = true;
-      this.lookSurface.classList.add('lookable');
       const c = this.cam;
       return this.anim(ms, (e, k, now) => {
         const t = lerp(t0, t1, e); this.progress = t;
@@ -620,10 +576,7 @@
         c.heading += angDiff(c.heading, this.routeHeading(t)) * 0.045;
         c.pitch += (this.pitchFlight - c.pitch) * 0.05;
         this.emit(p.lat, p.lng, this.alt(t) + 3, now);
-      }, easeSine).then(() => {
-        this.flying = false; this.lookPointer = null;
-        this.lookSurface.classList.remove('lookable', 'look-dragging');
-      });
+      }, easeSine).then(() => { this.flying = false; });
     }
   }
 

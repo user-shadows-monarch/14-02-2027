@@ -49,6 +49,7 @@
   let currentScene = null;
   function go(id) {
     const cfg = SCENES[id];
+    if (currentScene === 's-world' && id !== 's-world' && window.World) World.leave();
     currentScene = id;
     $$('.scene').forEach(s => s.classList.toggle('active', s.id === id));
     app.dataset.scene = id;
@@ -94,10 +95,7 @@
     $('#p-label').textContent = tpl(C.promise.button);
     $('#p-after').textContent = tpl(C.promise.after);
     $('#p-replay').textContent = tpl(C.promise.replay);
-    $('#p-explore').textContent = tpl(C.walkWorld.button);
-    $('#walk-title').textContent = tpl(C.walkWorld.location.name);
-    $('#walk-exit').textContent = tpl(C.walkWorld.close);
-    $('#walk-controls').textContent = tpl(C.walkWorld.controls);
+    $('#p-world-label').textContent = tpl(C.promise.world || 'Step into our world');
     document.title = R.from.name + ' ✈ ' + R.to.name + ' · a journey for you';
   }
 
@@ -412,20 +410,17 @@
     FX.fireworks(9); FX.confetti(undefined, undefined, 160);
     FX.set('party');
     setTimeout(() => {
-      $('#p-explore').hidden = !C.walkWorld.enabled;
       $('#p-replay').hidden = false;
+      if (window.World && World.supported() && !(C.world && C.world.enabled === false)) $('#p-world').hidden = false;
     }, 3500);
   });
   $('#p-replay').addEventListener('click', () => location.reload());
-  $('#p-explore').addEventListener('click', () => {
+  async function enterWorld() {
     go('s-world');
-    window.WalkWorld.start();
-  });
-  $('#walk-exit').addEventListener('click', () => {
-    window.WalkWorld.stop();
-    go('s-promise');
-  });
-  $('#walk-retry').addEventListener('click', () => window.WalkWorld.start());
+    const ok = await World.enter({ C, onExit: () => { go('s-promise'); } });
+    if (ok === false) $('#w-load-back').onclick = () => go('s-promise');
+  }
+  $('#p-world').addEventListener('click', enterWorld);
 
   /* ---------- wiring ---------- */
   function begin() {
@@ -458,7 +453,6 @@
     pv.classList.toggle('active', c); pv.setAttribute('aria-pressed', c);
     pv.setAttribute('aria-label', c ? 'Switch to chase view' : 'Switch to plane view');
   }
-  if (Use3D) map.canvas.addEventListener('povchange', syncPov);
   $('#pov').addEventListener('click', () => { if (!Use3D) return; map.setPov(map.pov === 'cockpit' ? 'chase' : 'cockpit'); syncPov(); });
   $('#sound').addEventListener('click', e => {
     const m = window.Music.toggleMute();
